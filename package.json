@@ -2,7 +2,14 @@
   "name": "@varlet/release",
   "type": "module",
   "version": "0.0.0",
-  "description": "",
+  "description": "release all packages and generate changelogs",
+  "keywords": [
+    "varlet",
+    "release",
+    "changelog"
+  ],
+  "author": "clencat <2091927351@qq.com>",
+  "license": "MIT",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -14,17 +21,14 @@
     }
   },
   "bin": {
-    "vr": "bin/index.mjs"
+    "vr": "bin/index.js"
   },
   "scripts": {
     "build": "tsc --noEmit && tsup",
-    "dev": "node bin/index.mjs",
+    "dev": "node bin/index.js",
     "test": "pnpm run build && pnpm run dev",
-    "check": "tsc --noEmit && eslint --ext .ts,.mjs"
+    "checkAll": "tsc --noEmit && eslint --ext .ts,.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "MIT",
   "packageManager": "pnpm@8.7.5",
   "engines": {
     "node": ">=16.0.0",

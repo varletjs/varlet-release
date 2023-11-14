@@ -2,7 +2,6 @@ import conventionalChangelog from 'conventional-changelog'
 import fse from 'fs-extra'
 import { createSpinner } from 'nanospinner'
 import { resolve as resolvePath } from 'path'
-import { CWD } from './constant'
 
 const { createWriteStream } = fse
 
@@ -19,7 +18,7 @@ export function changelog({ releaseCount = 0, file = 'CHANGELOG.md' }: Changelog
       preset: 'angular',
       releaseCount,
     })
-      .pipe(createWriteStream(resolvePath(CWD, file)))
+      .pipe(createWriteStream(resolvePath(process.cwd(), file)))
       .on('close', () => {
         s.success({ text: 'Changelog generated success!' })
         resolve()

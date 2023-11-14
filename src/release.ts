@@ -7,8 +7,8 @@ import { glob } from 'glob'
 import inquirer from 'inquirer'
 import { resolve } from 'path'
 import { changelog } from './changelog.js'
-import { CWD } from './constant'
 
+const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse
 const { prompt } = inquirer
 
@@ -50,7 +50,7 @@ function updateVersion(version: string) {
   packageJsons.push('package.json')
 
   packageJsons.forEach((path: string) => {
-    const file = resolve(CWD, path)
+    const file = resolve(cwd, path)
     const config = readJSONSync(file)
 
     config.version = version
@@ -123,7 +123,7 @@ export interface ReleaseCommandOptions {
 
 export async function release(options: ReleaseCommandOptions) {
   try {
-    const currentVersion = readJSONSync(resolve(CWD, 'package.json')).version
+    const currentVersion = readJSONSync(resolve(cwd, 'package.json')).version
 
     if (!currentVersion) {
       logger.error('Your package is missing the version field')
