@@ -1,6 +1,6 @@
 dist/**
 
-*.md
+CHANGELOG.md
 .github/**
 .history/**
 
