@@ -9,6 +9,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Test node version  
+        run: node -v
+
       - name: Install pnpm
         run: corepack enable
 
