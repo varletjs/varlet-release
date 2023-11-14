@@ -10,6 +10,11 @@
   ],
   "author": "clencat <2091927351@qq.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/varletjs/release"
+  },
+  "bugs": "https://github.com/varletjs/release/issues",
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -23,6 +28,9 @@
   "bin": {
     "vr": "bin/index.js"
   },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
     "build": "tsc --noEmit && tsup",
