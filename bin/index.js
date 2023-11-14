@@ -7,7 +7,6 @@ const program = new Command()
 program
   .command('release')
   .option('-r --remote <remote>', 'Remote name')
-  .option('-o --otp <otp>', 'One-time password')
   .description('Release all packages and generate changelogs')
   .action(async (options) => release(options))
 
