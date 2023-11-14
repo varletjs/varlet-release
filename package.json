@@ -24,9 +24,10 @@
     "vr": "bin/index.js"
   },
   "scripts": {
+    "preinstall": "npx only-allow pnpm",
     "build": "tsc --noEmit && tsup",
     "dev": "node bin/index.js",
-    "test": "pnpm run build && pnpm run dev",
+    "release": "pnpm run build && pnpm run dev release",
     "checkAll": "tsc --noEmit && eslint --ext .ts,.js"
   },
   "packageManager": "pnpm@8.7.5",
