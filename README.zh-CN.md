@@ -1,4 +1,4 @@
-<h1 align="center">@varlet/release</h1>
+<h1 align="center">Varlet Release</h1>
 
 <p align="center">
   <span>中文</span> | 
@@ -11,14 +11,14 @@
 
 ## 介绍
 
-`@varlet/release 是一个用于发布所有包并生成变更日志的工具。
+`Varlet release` 是一个用于发布所有包并生成变更日志的工具。
 
 ## 安装
 
 ### npm
 
 ```shell
-npm install --save-dev @varlet/release
+npm i @varlet/release -D
 ```
 
 ### yarn

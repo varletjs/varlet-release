@@ -33,10 +33,10 @@
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "build": "tsc --noEmit && tsup",
     "dev": "node bin/index.js",
-    "release": "pnpm run build && pnpm run dev release",
-    "checkAll": "tsc --noEmit && eslint --ext .ts,.js"
+    "build": "tsc --noEmit && tsup",
+    "release": "pnpm build && pnpm dev release",
+    "lint": "tsc --noEmit && eslint --ext .ts,.js"
   },
   "packageManager": "pnpm@8.7.5",
   "engines": {

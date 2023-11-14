@@ -1,4 +1,4 @@
-<h1 align="center">@varlet/release</h1>
+<h1 align="center">Varlet Release</h1>
 
 <p align="center">
   <span>English</span> | 
@@ -11,14 +11,14 @@
 
 ## Intro
 
-`@varlet/release` is a tool to release all packages and generate changelogs.
+`Varlet Release` is a tool to release all packages and generate changelogs.
 
 ## Installation
 
 ### npm
 
 ```shell
-npm install --save-dev @varlet/release
+npm i @varlet/release -D
 ```
 
 ### yarn
