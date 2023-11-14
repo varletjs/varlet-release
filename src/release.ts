@@ -19,11 +19,16 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
-async function publish(preRelease: boolean) {
+async function publish(preRelease: boolean, otp?: string) {
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
-  preRelease && args.push('--tag', 'alpha')
+  if (preRelease) {
+    args.push('--tag', 'alpha')
+  }
+  if (otp) {
+    args.push(`--otp=${otp}`)
+  }
   const ret = await execa('pnpm', args)
   if (ret.stderr && ret.stderr.includes('npm ERR!')) {
     throw new Error('\n' + ret.stderr)
@@ -118,6 +123,7 @@ async function getReleaseType() {
 
 export interface ReleaseCommandOptions {
   remote?: string
+  otp?: string
   task?(): Promise<void>
 }
 
@@ -158,7 +164,7 @@ export async function release(options: ReleaseCommandOptions) {
       await options.task()
     }
 
-    await publish(isPreRelease)
+    await publish(isPreRelease, options.otp)
 
     if (!isPreRelease) {
       await changelog()
