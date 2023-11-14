@@ -1,0 +1,57 @@
+{
+  "name": "@varlet/release",
+  "type": "module",
+  "version": "0.0.0",
+  "description": "",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "bin": {
+    "vr": "bin/index.mjs"
+  },
+  "scripts": {
+    "build": "tsc --noEmit && tsup",
+    "dev": "node bin/index.mjs",
+    "test": "pnpm run build && pnpm run dev",
+    "check": "tsc --noEmit && eslint --ext .ts,.mjs"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "MIT",
+  "packageManager": "pnpm@8.7.5",
+  "engines": {
+    "node": ">=16.0.0",
+    "pnpm": ">=8.0"
+  },
+  "devDependencies": {
+    "@types/conventional-changelog": "^3.1.5",
+    "@types/fs-extra": "^11.0.4",
+    "@types/inquirer": "^9.0.7",
+    "@types/node": "^20.9.0",
+    "@types/semver": "^7.5.5",
+    "@varlet/eslint-config": "^2.18.4",
+    "eslint": "^8.53.0",
+    "prettier": "^3.1.0",
+    "typescript": "^5.2.2",
+    "unbuild": "^2.0.0"
+  },
+  "dependencies": {
+    "commander": "^11.1.0",
+    "conventional-changelog": "^5.1.0",
+    "execa": "^8.0.1",
+    "fs-extra": "^11.1.1",
+    "glob": "^10.3.10",
+    "inquirer": "^9.2.12",
+    "nanospinner": "^1.1.0",
+    "rslog": "^1.1.0",
+    "semver": "^7.5.4",
+    "tsup": "^7.2.0"
+  }
+}
