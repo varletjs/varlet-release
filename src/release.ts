@@ -12,7 +12,7 @@ const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse
 const { prompt } = inquirer
 
-const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch']
+const releaseTypes = ['prerelease', 'premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch'] as const
 
 async function isWorktreeEmpty() {
   const ret = await execa('git', ['status', '--porcelain'])
@@ -106,17 +106,23 @@ async function confirmRefs(remote = 'origin') {
   return ret[name]
 }
 
-async function getReleaseType() {
+async function getExpectVersion(currentVersion: string) {
   const name = 'Please select release type'
+  const choices = releaseTypes.map((type) => `${type}(${semver.inc(currentVersion, type, 'alpha')})`)
   const ret = await prompt([
     {
       name,
       type: 'list',
-      choices: releaseTypes,
+      choices,
     },
   ])
 
-  return ret[name]
+  const type = ret[name] as string
+
+  return {
+    isPreRelease: type.startsWith('pre'),
+    expectVersion: type.match(/\((.*?)\)/)![1],
+  }
 }
 
 export interface ReleaseCommandOptions {
@@ -133,6 +139,8 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
+    logger.start(`current version: ${currentVersion}`)
+
     if (!(await isWorktreeEmpty())) {
       logger.error('Git worktree is not empty, please commit changed')
       return
@@ -146,10 +154,7 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    const type = await getReleaseType()
-    const isPreRelease = type.startsWith('pre')
-    let expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
-    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
+    const { expectVersion, isPreRelease } = await getExpectVersion(currentVersion)
 
     if (!(await confirmVersion(currentVersion, expectVersion))) {
       return
