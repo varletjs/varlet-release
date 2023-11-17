@@ -1,3 +1,13 @@
+## [0.0.3](https://github.com/varletjs/release/compare/v0.0.2...v0.0.3) (2023-11-17)
+
+
+### Bug Fixes
+
+* fix logger ([3728d8d](https://github.com/varletjs/release/commit/3728d8d36809c4eb6ef49017c146f5763ec69237))
+* fix restore error ([1485b38](https://github.com/varletjs/release/commit/1485b3830056e8e27fb3cedc0100e0db08727056))
+
+
+
 ## [0.0.2](https://github.com/varletjs/release/compare/v0.0.1...v0.0.2) (2023-11-15)
 
 
