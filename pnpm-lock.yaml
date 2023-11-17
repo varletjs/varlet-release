@@ -26,9 +26,9 @@ dependencies:
   nanospinner:
     specifier: ^1.1.0
     version: registry.npmjs.org/nanospinner@1.1.0
-  rslog:
-    specifier: ^1.1.0
-    version: registry.npmjs.org/rslog@1.1.0
+  picocolors:
+    specifier: ^1.0.0
+    version: registry.npmjs.org/picocolors@1.0.0
   semver:
     specifier: ^7.5.4
     version: registry.npmjs.org/semver@7.5.4
@@ -4424,13 +4424,6 @@ packages:
     hasBin: true
     optionalDependencies:
       fsevents: registry.npmjs.org/fsevents@2.3.3
-
-  registry.npmjs.org/rslog@1.1.0:
-    resolution: {integrity: sha512-wtTijPuwUhyVG7YvnIVzlefhlto4qJ9vm42ewwJtqrOBP/vKdZCIyfiYm0odVCR3ajR1CIUqaloIzbqhlbyaZA==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/rslog/-/rslog-1.1.0.tgz}
-    name: rslog
-    version: 1.1.0
-    engines: {node: '>=14.17.6'}
-    dev: false
 
   registry.npmjs.org/run-async@3.0.0:
     resolution: {integrity: sha512-540WwVDOMxA6dN6We19EcT9sc3hkXPw5mzRNGM3FkdN/vtE9NFvj5lFAPNwUDmJjXidm3v7TC1cTE7t17Ulm1Q==, registry: https://registry.npmjs.com/, tarball: https://registry.npmjs.org/run-async/-/run-async-3.0.0.tgz}

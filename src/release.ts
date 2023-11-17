@@ -1,7 +1,7 @@
 import { createSpinner } from 'nanospinner'
 import fse from 'fs-extra'
 import { execa } from 'execa'
-import { logger } from 'rslog'
+import logger from './logger'
 import semver from 'semver'
 import { glob } from 'glob'
 import inquirer from 'inquirer'
@@ -12,7 +12,60 @@ const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse
 const { prompt } = inquirer
 
-const releaseTypes = ['prerelease', 'premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch'] as const
+const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch'] as const
+
+async function getRemoteVersion() {
+  const name = 'Please select the release type'
+  const ret = await prompt([
+    {
+      name,
+      type: 'list',
+      choices: [
+        {
+          name: 'latest',
+          value: 'latest',
+        },
+        {
+          name: 'alpha',
+          value: 'alpha',
+        },
+      ],
+    },
+  ])
+
+  const releaseType = ret[name] as string
+
+  const s = createSpinner('Get Remote version').start()
+  const { name: packageName, version } = readJSONSync(resolve(cwd, 'package.json'))
+  try {
+    const { stdout } = await execa('npm', ['view', `${packageName}@${releaseType}`, 'version'])
+    s.stop()
+    return stdout
+  } catch (error: any) {
+    s.stop()
+    logger.error(error.toString())
+
+    const name = 'Get remote version error, if this is the first release, please select'
+    const ret = await prompt([
+      {
+        name,
+        type: 'list',
+        choices: [
+          {
+            name: 'Use default version 0.0.0',
+            value: '0.0.0',
+          },
+          {
+            name: 'Use package.json version',
+            value: version,
+          },
+        ],
+      },
+    ])
+
+    return ret[name] as string
+  }
+}
 
 async function isWorktreeEmpty() {
   const ret = await execa('git', ['status', '--porcelain'])
@@ -108,7 +161,17 @@ async function confirmRefs(remote = 'origin') {
 
 async function getExpectVersion(currentVersion: string) {
   const name = 'Please select release type'
-  const choices = releaseTypes.map((type) => `${type}(${semver.inc(currentVersion, type, 'alpha')})`)
+  const choices = releaseTypes.map((type) => {
+    const version = semver.inc(
+      currentVersion,
+      type.startsWith('pre') && currentVersion.includes('alpha') ? 'prerelease' : type,
+      'alpha',
+    )
+    return {
+      name: `${type}(${version})`,
+      value: version,
+    }
+  })
   const ret = await prompt([
     {
       name,
@@ -117,11 +180,11 @@ async function getExpectVersion(currentVersion: string) {
     },
   ])
 
-  const type = ret[name] as string
+  const expectVersion = ret[name] as string
 
   return {
-    isPreRelease: type.startsWith('pre'),
-    expectVersion: type.match(/\((.*?)\)/)![1],
+    isPreRelease: expectVersion.includes('alpha'),
+    expectVersion,
   }
 }
 
@@ -132,19 +195,13 @@ export interface ReleaseCommandOptions {
 
 export async function release(options: ReleaseCommandOptions) {
   try {
-    const currentVersion = readJSONSync(resolve(cwd, 'package.json')).version
-
-    if (!currentVersion) {
-      logger.error('Your package is missing the version field')
-      return
-    }
-
-    logger.start(`current version: ${currentVersion}`)
-
     if (!(await isWorktreeEmpty())) {
       logger.error('Git worktree is not empty, please commit changed')
       return
     }
+
+    const currentVersion = await getRemoteVersion()
+    logger.title(`current version: ${currentVersion}`)
 
     if (!(await confirmRefs(options.remote))) {
       return
