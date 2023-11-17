@@ -33,10 +33,10 @@
   ],
   "scripts": {
     "preinstall": "npx only-allow pnpm",
-    "dev": "node bin/index.js",
-    "build": "tsc --noEmit && tsup",
-    "release": "pnpm build && pnpm dev release",
-    "lint": "tsc --noEmit && eslint --ext .ts,.js"
+    "dev": "tsup --watch",
+    "build": "tsup",
+    "release": "pnpm build && node bin/index.js release",
+    "lint": "eslint --ext .ts,.js"
   },
   "packageManager": "pnpm@8.7.5",
   "engines": {
@@ -58,6 +58,7 @@
   "dependencies": {
     "commander": "^11.1.0",
     "conventional-changelog": "^5.1.0",
+    "picocolors": "^1.0.0",
     "execa": "^8.0.1",
     "fs-extra": "^11.1.1",
     "glob": "^10.3.10",
