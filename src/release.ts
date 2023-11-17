@@ -173,10 +173,11 @@ export async function release(options: ReleaseCommandOptions) {
     if (isPreRelease) {
       try {
         await execa('git', ['restore', '**/package.json'])
+      } catch { /* empty */ }
+
+      try {
         await execa('git', ['restore', 'package.json'])
-      } catch {
-        logger.error('Restore package.json has failed, please restore manually')
-      }
+      } catch { /* empty */ }
     }
   } catch (error: any) {
     logger.error(error.toString())
