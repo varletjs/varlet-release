@@ -1,6 +1,6 @@
 import { createSpinner } from 'nanospinner'
 import fse from 'fs-extra'
-import { execa } from 'execa'
+import { type ExecaReturnBase, execa } from 'execa'
 import logger from './logger'
 import semver from 'semver'
 import { glob } from 'glob'
@@ -15,56 +15,51 @@ const { prompt } = inquirer
 const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch'] as const
 
 async function getRemoteVersion() {
-  const name = 'Please select the release type'
+  const { name: packageName, version } = readJSONSync(resolve(cwd, 'package.json'))
+
+  const s = createSpinner('Get Remote version...').start()
+  const choices = (
+    (
+      await Promise.allSettled([
+        execa('npm', ['view', `${packageName}@latest`, 'version']),
+        execa('npm', ['view', `${packageName}@alpha`, 'version']),
+      ])
+    ).filter((res) => res.status === 'fulfilled') as PromiseFulfilledResult<ExecaReturnBase<string>>[]
+  ).map((res) => res.value.stdout)
+  s.stop()
+
+  if (choices.length) {
+    const name = 'Please select the version'
+    const ret = await prompt([
+      {
+        name,
+        type: 'list',
+        choices,
+      },
+    ])
+
+    return ret[name] as string
+  }
+
+  const name = 'Get remote version error, if this is the first release, please select'
   const ret = await prompt([
     {
       name,
       type: 'list',
       choices: [
         {
-          name: 'latest',
-          value: 'latest',
+          name: 'Use default version 0.0.0',
+          value: '0.0.0',
         },
         {
-          name: 'alpha',
-          value: 'alpha',
+          name: 'Use package.json version',
+          value: version,
         },
       ],
     },
   ])
 
-  const releaseType = ret[name] as string
-
-  const s = createSpinner('Get Remote version').start()
-  const { name: packageName, version } = readJSONSync(resolve(cwd, 'package.json'))
-  try {
-    const { stdout } = await execa('npm', ['view', `${packageName}@${releaseType}`, 'version'])
-    s.stop()
-    return stdout
-  } catch (error: any) {
-    s.stop()
-    logger.error(error.toString())
-
-    const name = 'Get remote version error, if this is the first release, please select'
-    const ret = await prompt([
-      {
-        name,
-        type: 'list',
-        choices: [
-          {
-            name: 'Use default version 0.0.0',
-            value: '0.0.0',
-          },
-          {
-            name: 'Use package.json version',
-            value: version,
-          },
-        ],
-      },
-    ])
-
-    return ret[name] as string
-  }
+  return ret[name] as string
 }
 
 async function isWorktreeEmpty() {
@@ -200,9 +195,6 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    const currentVersion = await getRemoteVersion()
-    logger.title(`current version: ${currentVersion}`)
-
     if (!(await confirmRefs(options.remote))) {
       return
     }
@@ -210,6 +202,9 @@ export async function release(options: ReleaseCommandOptions) {
     if (!(await confirmRegistry())) {
       return
     }
+
+    const currentVersion = await getRemoteVersion()
+    logger.title(`current version: ${currentVersion}`)
 
     const { expectVersion, isPreRelease } = await getExpectVersion(currentVersion)
 
