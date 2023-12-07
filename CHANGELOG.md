@@ -1,3 +1,12 @@
+## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-07)
+
+
+### Features
+
+* expose more functions ([7895689](https://github.com/varletjs/release/commit/7895689306a73d5ef3b59e4759e2a603b47a40a7))
+
+
+
 ## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-07)
 
 
