@@ -11,7 +11,7 @@
 
 ## Intro
 
-`Varlet Release` is a tool to release all packages and generate changelogs.
+`Varlet Release` is a tool to release all packages, generate changelogs and lint commit message.
 
 ## Installation
 
@@ -54,22 +54,30 @@ npx vr changelog -f <filename>
 # or
 npx vr changelog --file <filename>
 
+# Lint commit message
+npx vr lint-commit <gitMessagePath>
 ```
 
 ### Configuration
 
 #### release
 
-| Params               | Instructions        |
-| -------------------- | ------------------- |
-| -r --remote <remote> | Specify remote name |
+| Params                 | Instructions        |
+| ---------------------- | ------------------- |
+| -r --remote \<remote\> | Specify remote name |
 
 #### changelog
 
-| Params                            | Instructions               |
-| --------------------------------- | -------------------------- |
-| -f --file <filename>              | Specify changelog filename |
-| -rc --releaseCount <releaseCount> | Release count              |
+| Params                              | Instructions               |
+| ----------------------------------- | -------------------------- |
+| -f --file \<filename\>              | Specify changelog filename |
+| -rc --releaseCount \<releaseCount\> | Release count              |
+
+#### lint-commit
+
+| Params             | Instructions                                                                                                           |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| \<gitMessagePath\> | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
 
 ### Custom Handle
 
@@ -109,6 +117,7 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
+function commitLint(gitMessagePath: string): void
 ```
 
 ## License

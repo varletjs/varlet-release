@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { release, changelog } from '../dist/index.js'
+import { release, changelog, commitLint } from '../dist/index.js'
 import { Command } from 'commander'
 
 const program = new Command()
@@ -16,5 +16,10 @@ program
   .option('-f --file <file>', 'Changelog filename')
   .description('Generate changelog')
   .action(async (options) => changelog(options))
+
+program
+  .command('commit-lint <gitMessagePath>')
+  .description('Lint commit message')
+  .action(async (option) => commitLint(option))
 
 program.parse()

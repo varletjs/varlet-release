@@ -11,7 +11,7 @@
 
 ## 介绍
 
-`Varlet Release` 是一个用于发布所有包并生成变更日志的工具。
+`Varlet Release` 是一个用于发布所有包、生成变更日志和检测 `commit message` 的工具。
 
 ## 安装
 
@@ -54,22 +54,30 @@ npx vr changelog -f <filename>
 # or
 npx vr changelog --file <filename>
 
+# 检测 commit message
+npx vr lint-commit <gitMessagePath>
 ```
 
 ### 配置
 
 #### release
 
-| 参数                 | 说明             |
-| -------------------- | ---------------- |
-| -r --remote <remote> | 指定远程仓库名称 |
+| 参数                   | 说明             |
+| ---------------------- | ---------------- |
+| -r --remote \<remote\> | 指定远程仓库名称 |
 
 #### changelog
 
-| 参数                              | 说明               |
-| --------------------------------- | ------------------ |
-| -f --file <filename>              | 指定变更日志文件名 |
-| -rc --releaseCount <releaseCount> | 发布数量           |
+| 参数                                | 说明               |
+| ----------------------------------- | ------------------ |
+| -f --file \<filename\>              | 指定变更日志文件名 |
+| -rc --releaseCount \<releaseCount\> | 发布数量           |
+
+#### lint-commit
+
+| 参数               | 说明                                                                        |
+| ------------------ | --------------------------------------------------------------------------- |
+| \<gitMessagePath\> | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
 
 ### 自定义处理
 
@@ -109,6 +117,7 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
+function commitLint(gitMessagePath: string): void
 ```
 
 ## License
