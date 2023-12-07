@@ -1,5 +1,3 @@
-import { release } from './release'
-import { changelog } from './changelog'
-import { commitLint } from './commitLint'
-
-export { release, changelog, commitLint }
+export * from './release'
+export * from './changelog'
+export * from './commitLint'
