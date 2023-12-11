@@ -42,20 +42,20 @@ pnpm add @varlet/release -D
 npx vr release
 
 # Specify remote name
-npx vr release -r <remote>
+npx vr release -r https://github.com/varletjs/varlet-release
 # or
-npx vr release --remote <remote>
+npx vr release --remote https://github.com/varletjs/varlet-release
 
 # Just generate changelogs
 npx vr changelog
 
 # Specify changelog filename
-npx vr changelog -f <filename>
+npx vr changelog -f changelog.md
 # or
-npx vr changelog --file <filename>
+npx vr changelog --file changelog.md
 
 # Lint commit message
-npx vr lint-commit <gitMessagePath>
+npx vr lint-commit .git/COMMIT_EDITMSG
 ```
 
 ### Configuration
@@ -75,9 +75,12 @@ npx vr lint-commit <gitMessagePath>
 
 #### lint-commit
 
-| Params             | Instructions                                                                                                           |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| \<gitMessagePath\> | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
+| Params                           | Instructions                                                                                                           |
+| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| \<commitMessagePath\>            | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
+| -cmr --commitMessageRe \<reg\>   | Validate the regular of whether the commit message passes                                                              |
+| -em --errorMessage \<message\>   | Validation failed to display error messages                                                                            |
+| -wm --warningMessage \<message\> | Validation failed to display warning messages                                                                          |
 
 ### Custom Handle
 
@@ -117,7 +120,7 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
-function commitLint(gitMessagePath: string): void
+function commitLint(commitMessagePath: string): void
 ```
 
 ## License

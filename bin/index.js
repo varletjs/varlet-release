@@ -18,7 +18,11 @@ program
   .action(async (options) => changelog(options))
 
 program
-  .command('commit-lint <gitMessagePath>')
+  .command('commit-lint')
+  .option('-p --commitMessagePath <commitMessagePath>', 'Git commit message path')
+  .option('-cmr --commitMessageRe <reg>', 'Validate the regular of whether the commit message passes')
+  .option('-em --errorMessage <message>', 'Validation failed to display error messages')
+  .option('-wm --warningMessage <message>', 'Validation failed to display warning messages')
   .description('Lint commit message')
   .action(async (option) => commitLint(option))
 

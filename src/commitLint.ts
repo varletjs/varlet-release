@@ -7,20 +7,8 @@ const { readFileSync } = fse
 export const COMMIT_MESSAGE_RE =
   /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor)(\(.+\))?!?: (.|\n)+/
 
-export function isVersionCommitMessage(message: string) {
-  return message.startsWith('v') && semver.valid(message.slice(1))
-}
-
-export function getCommitMessage(gitMessagePath: string) {
-  return readFileSync(gitMessagePath, 'utf-8').trim()
-}
-
-export function commitLint(gitMessagePath: string) {
-  const commitMessage = getCommitMessage(gitMessagePath)
-
-  if (!isVersionCommitMessage(commitMessage) && !COMMIT_MESSAGE_RE.test(commitMessage)) {
-    logger.error(`Commit message invalid`)
-    logger.warning(`\
+const ERROR_MESSAGE = 'Commit message invalid.'
+const WARNING_MESSAGE = `\
 The rules for commit messages are as follows
 
 Example:
@@ -49,7 +37,37 @@ Allowed types:
 - revert
 
 Commit message reference: https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y
-参考阮一峰Commit message编写指南: https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html`)
+参考阮一峰Commit message编写指南: https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html`
+
+export function isVersionCommitMessage(message: string) {
+  return message.startsWith('v') && semver.valid(message.slice(1))
+}
+
+export function getCommitMessage(commitMessagePath: string) {
+  return readFileSync(commitMessagePath, 'utf-8').trim()
+}
+
+export interface CommitLintCommandOptions {
+  commitMessagePath: string
+  commitMessageRe?: string | RegExp
+  errorMessage?: string
+  warningMessage?: string
+}
+
+export function commitLint(options: CommitLintCommandOptions) {
+  const {
+    commitMessagePath,
+    commitMessageRe = COMMIT_MESSAGE_RE,
+    errorMessage = ERROR_MESSAGE,
+    warningMessage = WARNING_MESSAGE,
+  } = options
+
+  const commitMessage = getCommitMessage(commitMessagePath)
+  const isValidCommitMessage = new RegExp(commitMessageRe).test(commitMessage)
+
+  if (!isVersionCommitMessage(commitMessage) && !isValidCommitMessage) {
+    logger.error(errorMessage)
+    logger.warning(warningMessage)
     process.exit(1)
   }
 }
