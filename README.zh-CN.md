@@ -55,7 +55,7 @@ npx vr changelog -f changelog.md
 npx vr changelog --file changelog.md
 
 # 检测 commit message
-npx vr lint-commit .git/COMMIT_EDITMSG
+npx vr lint-commit -p .git/COMMIT_EDITMSG
 ```
 
 ### 配置
@@ -75,12 +75,12 @@ npx vr lint-commit .git/COMMIT_EDITMSG
 
 #### lint-commit
 
-| 参数                             | 说明                                                                        |
-| -------------------------------- | --------------------------------------------------------------------------- |
-| \<commitMessagePath\>            | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
-| -cmr --commitMessageRe \<reg\>   | 验证 `commit message` 是否通过的正则                                        |
-| -em --errorMessage \<message\>   | 验证失败展示的错误信息                                                      |
-| -wm --warningMessage \<message\> | 验证失败展示的提示信息                                                      |
+| 参数                            | 说明                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| -p --commitMessagePath \<path\> | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
+| -r --commitMessageRe \<reg\>    | 验证 `commit message` 是否通过的正则                                        |
+| -e --errorMessage \<message\>   | 验证失败展示的错误信息                                                      |
+| -w --warningMessage \<message\> | 验证失败展示的提示信息                                                      |
 
 ### 自定义处理
 
@@ -120,7 +120,14 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
-function commitLint(commitMessagePath: string): void
+
+interface CommitLintCommandOptions {
+  commitMessagePath: string
+  commitMessageRe?: string | RegExp
+  errorMessage?: string
+  warningMessage?: string
+}
+function commitLint(options: CommitLintCommandOptions): void
 ```
 
 ## License

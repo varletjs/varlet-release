@@ -55,7 +55,7 @@ npx vr changelog -f changelog.md
 npx vr changelog --file changelog.md
 
 # Lint commit message
-npx vr lint-commit .git/COMMIT_EDITMSG
+npx vr lint-commit -p .git/COMMIT_EDITMSG
 ```
 
 ### Configuration
@@ -75,12 +75,12 @@ npx vr lint-commit .git/COMMIT_EDITMSG
 
 #### lint-commit
 
-| Params                           | Instructions                                                                                                           |
-| -------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| \<commitMessagePath\>            | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
-| -cmr --commitMessageRe \<reg\>   | Validate the regular of whether the commit message passes                                                              |
-| -em --errorMessage \<message\>   | Validation failed to display error messages                                                                            |
-| -wm --warningMessage \<message\> | Validation failed to display warning messages                                                                          |
+| Params                          | Instructions                                                                                                           |
+| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| -p --commitMessagePath \<path\> | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
+| -r --commitMessageRe \<reg\>    | Validate the regular of whether the commit message passes                                                              |
+| -e --errorMessage \<message\>   | Validation failed to display error messages                                                                            |
+| -w --warningMessage \<message\> | Validation failed to display warning messages                                                                          |
 
 ### Custom Handle
 
@@ -120,7 +120,14 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
-function commitLint(commitMessagePath: string): void
+
+interface CommitLintCommandOptions {
+  commitMessagePath: string
+  commitMessageRe?: string | RegExp
+  errorMessage?: string
+  warningMessage?: string
+}
+function commitLint(options: CommitLintCommandOptions): void
 ```
 
 ## License
