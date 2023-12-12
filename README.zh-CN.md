@@ -42,20 +42,20 @@ pnpm add @varlet/release -D
 npx vr release
 
 # 指定远程仓库名称
-npx vr release -r <remote>
+npx vr release -r https://github.com/varletjs/varlet-release
 # or
-npx vr release --remote <remote>
+npx vr release --remote https://github.com/varletjs/varlet-release
 
 # 仅生成变更日志
 npx vr changelog
 
 # 指定变更日志文件名
-npx vr changelog -f <filename>
+npx vr changelog -f changelog.md
 # or
-npx vr changelog --file <filename>
+npx vr changelog --file changelog.md
 
 # 检测 commit message
-npx vr lint-commit <gitMessagePath>
+npx vr lint-commit -p .git/COMMIT_EDITMSG
 ```
 
 ### 配置
@@ -75,9 +75,12 @@ npx vr lint-commit <gitMessagePath>
 
 #### lint-commit
 
-| 参数               | 说明                                                                        |
-| ------------------ | --------------------------------------------------------------------------- |
-| \<gitMessagePath\> | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
+| 参数                            | 说明                                                                        |
+| ------------------------------- | --------------------------------------------------------------------------- |
+| -p --commitMessagePath \<path\> | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
+| -r --commitMessageRe \<reg\>    | 验证 `commit message` 是否通过的正则                                        |
+| -e --errorMessage \<message\>   | 验证失败展示的错误信息                                                      |
+| -w --warningMessage \<message\> | 验证失败展示的提示信息                                                      |
 
 ### 自定义处理
 
@@ -117,7 +120,14 @@ interface ChangelogCommandOptions {
   releaseCount?: number
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
-function commitLint(gitMessagePath: string): void
+
+interface CommitLintCommandOptions {
+  commitMessagePath: string
+  commitMessageRe?: string | RegExp
+  errorMessage?: string
+  warningMessage?: string
+}
+function commitLint(options: CommitLintCommandOptions): void
 ```
 
 ## License
