@@ -56,6 +56,9 @@ npx vr changelog --file changelog.md
 
 # 检测 commit message
 npx vr lint-commit -p .git/COMMIT_EDITMSG
+
+# 发布到 npm，可以在 ci 中执行
+npx vr publish
 ```
 
 ### 配置
@@ -71,6 +74,7 @@ npx vr lint-commit -p .git/COMMIT_EDITMSG
 | 参数                                | 说明               |
 | ----------------------------------- | ------------------ |
 | -f --file \<filename\>              | 指定变更日志文件名 |
+| -s --skip-npm-publish               | 跳过 npm 发布      |
 | -rc --releaseCount \<releaseCount\> | 发布数量           |
 
 #### lint-commit
@@ -81,6 +85,12 @@ npx vr lint-commit -p .git/COMMIT_EDITMSG
 | -r --commitMessageRe \<reg\>    | 验证 `commit message` 是否通过的正则                                        |
 | -e --errorMessage \<message\>   | 验证失败展示的错误信息                                                      |
 | -w --warningMessage \<message\> | 验证失败展示的提示信息                                                      |
+
+#### publish
+
+```shell
+vr publish
+```
 
 ### 自定义处理
 
@@ -109,8 +119,11 @@ release({ task })
 #### 类型
 
 ```ts
+function publish(preRelease: boolean | undefined): Promise<void>
+function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
+  skipNpmPublish?: boolean
   task?(): Promise<void>
 }
 function release(options: ReleaseCommandOptions): Promise<void>
@@ -121,6 +134,9 @@ interface ChangelogCommandOptions {
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
 
+const COMMIT_MESSAGE_RE: RegExp
+function isVersionCommitMessage(message: string): string | false | null
+function getCommitMessage(commitMessagePath: string): string
 interface CommitLintCommandOptions {
   commitMessagePath: string
   commitMessageRe?: string | RegExp

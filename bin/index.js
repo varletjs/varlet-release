@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { release, changelog, commitLint } from '../dist/index.js'
+import { release, publish, changelog, commitLint } from '../dist/index.js'
 import { Command } from 'commander'
 
 const program = new Command()
@@ -7,8 +7,14 @@ const program = new Command()
 program
   .command('release')
   .option('-r --remote <remote>', 'Remote name')
+  .option('-s --skip-npm-publish', 'Skip npm publish')
   .description('Release all packages and generate changelogs')
   .action(async (options) => release(options))
+
+program
+  .command('publish')
+  .description('Publish to npm')
+  .action(async () => publish())
 
 program
   .command('changelog')
