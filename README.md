@@ -56,6 +56,9 @@ npx vr changelog --file changelog.md
 
 # Lint commit message
 npx vr lint-commit -p .git/COMMIT_EDITMSG
+
+# Publish to npm, which can be called in the ci environment
+npx vr publish
 ```
 
 ### Configuration
@@ -71,6 +74,7 @@ npx vr lint-commit -p .git/COMMIT_EDITMSG
 | Params                              | Instructions               |
 | ----------------------------------- | -------------------------- |
 | -f --file \<filename\>              | Specify changelog filename |
+| -s --skip-npm-publish               | Skip npm publish           |
 | -rc --releaseCount \<releaseCount\> | Release count              |
 
 #### lint-commit
@@ -81,6 +85,12 @@ npx vr lint-commit -p .git/COMMIT_EDITMSG
 | -r --commitMessageRe \<reg\>    | Validate the regular of whether the commit message passes                                                              |
 | -e --errorMessage \<message\>   | Validation failed to display error messages                                                                            |
 | -w --warningMessage \<message\> | Validation failed to display warning messages                                                                          |
+
+#### publish
+
+```shell
+vr publish
+```
 
 ### Custom Handle
 
@@ -109,8 +119,11 @@ release({ task })
 #### Types
 
 ```ts
+function publish(preRelease: boolean | undefined): Promise<void>
+function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
+  skipNpmPublish?: boolean
   task?(): Promise<void>
 }
 function release(options: ReleaseCommandOptions): Promise<void>
@@ -121,6 +134,9 @@ interface ChangelogCommandOptions {
 }
 function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
 
+const COMMIT_MESSAGE_RE: RegExp
+function isVersionCommitMessage(message: string): string | false | null
+function getCommitMessage(commitMessagePath: string): string
 interface CommitLintCommandOptions {
   commitMessagePath: string
   commitMessageRe?: string | RegExp

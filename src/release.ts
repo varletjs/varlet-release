@@ -20,11 +20,6 @@ async function isWorktreeEmpty() {
 }
 
 export async function publish(preRelease: boolean | undefined) {
-  if (preRelease == null) {
-    const config = readJSONSync(resolve(cwd, 'package.json'))
-    preRelease = config.version.includes('alpha.') as boolean
-  }
-
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
