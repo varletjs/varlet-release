@@ -19,7 +19,12 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
-async function publish(preRelease: boolean) {
+export async function publish(preRelease: boolean | undefined) {
+  if (preRelease == null) {
+    const config = readJSONSync(resolve(cwd, 'package.json'))
+    preRelease = config.version.includes('alpha.') as boolean
+  }
+
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
@@ -48,7 +53,7 @@ async function pushGit(version: string, remote = 'origin') {
   ret.stdout && logger.info(ret.stdout)
 }
 
-function updateVersion(version: string) {
+export function updateVersion(version: string) {
   const packageJsons = glob.sync('packages/*/package.json')
   packageJsons.push('package.json')
 
@@ -121,6 +126,7 @@ async function getReleaseType() {
 
 export interface ReleaseCommandOptions {
   remote?: string
+  skipNpmPublish?: boolean
   task?(): Promise<void>
 }
 
@@ -161,7 +167,9 @@ export async function release(options: ReleaseCommandOptions) {
       await options.task()
     }
 
-    await publish(isPreRelease)
+    if (!options.skipNpmPublish) {
+      await publish(isPreRelease)
+    }
 
     if (!isPreRelease) {
       await changelog()
@@ -173,11 +181,15 @@ export async function release(options: ReleaseCommandOptions) {
     if (isPreRelease) {
       try {
         await execa('git', ['restore', '**/package.json'])
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
 
       try {
         await execa('git', ['restore', 'package.json'])
-      } catch { /* empty */ }
+      } catch {
+        /* empty */
+      }
     }
   } catch (error: any) {
     logger.error(error.toString())
