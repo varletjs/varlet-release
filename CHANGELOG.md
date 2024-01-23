@@ -1,3 +1,12 @@
+# [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-1-23)
+
+
+### Features
+
+* **release:** implement CI pipeline for automated npm package publishing ([#3](https://github.com/varletjs/release/issues/3)) ([b038c0f](https://github.com/varletjs/release/commit/b038c0fd966b8764beacc8c45d2b96dbbceae62b))
+
+
+
 ## [0.1.2](https://github.com/varletjs/release/compare/v0.1.1...v0.1.2) (2023-12-13)
 
 
@@ -15,7 +24,7 @@
 
 
 
-## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-07)
+## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-7)
 
 
 ### Features
@@ -24,7 +33,7 @@
 
 
 
-## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-07)
+## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-7)
 
 
 ### Features
