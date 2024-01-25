@@ -1,3 +1,12 @@
+## [0.2.2](https://github.com/varletjs/release/compare/v0.2.1...v0.2.2) (2024-01-25)
+
+
+### Bug Fixes
+
+* fix skip git tag command error ([892d771](https://github.com/varletjs/release/commit/892d7712e57383eca8e291c02eed48afae564b9f))
+
+
+
 ## [0.2.1](https://github.com/varletjs/release/compare/v0.2.0...v0.2.1) (2024-01-25)
 
 
