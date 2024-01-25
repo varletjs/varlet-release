@@ -1,4 +1,13 @@
-# [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-1-23)
+## [0.2.1](https://github.com/varletjs/release/compare/v0.2.0...v0.2.1) (2024-01-25)
+
+
+### Features
+
+* support --skip-git-tag ([6e59690](https://github.com/varletjs/release/commit/6e596905437c4d08a31577690d08a5dbdc0d0007))
+
+
+
+# [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-01-23)
 
 
 ### Features
@@ -24,7 +33,7 @@
 
 
 
-## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-7)
+## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-07)
 
 
 ### Features
@@ -33,7 +42,7 @@
 
 
 
-## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-7)
+## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-07)
 
 
 ### Features
