@@ -36,15 +36,19 @@ export async function publish(preRelease: boolean | undefined) {
   }
 }
 
-async function pushGit(version: string, remote = 'origin') {
+async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   const s = createSpinner('Pushing to remote git repository').start()
   await execa('git', ['add', '.'])
   await execa('git', ['commit', '-m', `v${version}`])
-  await execa('git', ['tag', `v${version}`])
+
+  if (!skipGitTag) {
+    await execa('git', ['tag', `v${version}`])
+  }
+
   await execa('git', ['push', remote, `v${version}`])
+
   const ret = await execa('git', ['push'])
   s.success({ text: 'Push remote repository successfully' })
-
   ret.stdout && logger.info(ret.stdout)
 }
 
@@ -122,6 +126,7 @@ async function getReleaseType() {
 export interface ReleaseCommandOptions {
   remote?: string
   skipNpmPublish?: boolean
+  skipGitTag?: boolean
   task?(): Promise<void>
 }
 
@@ -168,7 +173,7 @@ export async function release(options: ReleaseCommandOptions) {
 
     if (!isPreRelease) {
       await changelog()
-      await pushGit(expectVersion, options.remote)
+      await pushGit(expectVersion, options.remote, options.skipGitTag)
     }
 
     logger.success(`Release version ${expectVersion} successfully!`)

@@ -68,13 +68,14 @@ npx vr publish
 | 参数                   | 说明             |
 | ---------------------- | ---------------- |
 | -r --remote \<remote\> | 指定远程仓库名称 |
+| -s --skip-npm-publish  | 跳过 npm 发布      |
+| -sgt --skip-git-tag  | 跳过 git tag      |
 
 #### changelog
 
 | 参数                                | 说明               |
 | ----------------------------------- | ------------------ |
 | -f --file \<filename\>              | 指定变更日志文件名 |
-| -s --skip-npm-publish               | 跳过 npm 发布      |
 | -rc --releaseCount \<releaseCount\> | 发布数量           |
 
 #### lint-commit
@@ -124,6 +125,7 @@ function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
   skipNpmPublish?: boolean
+  skipGitTag?: boolean
   task?(): Promise<void>
 }
 function release(options: ReleaseCommandOptions): Promise<void>

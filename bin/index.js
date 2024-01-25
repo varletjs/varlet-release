@@ -8,6 +8,7 @@ program
   .command('release')
   .option('-r --remote <remote>', 'Remote name')
   .option('-s --skip-npm-publish', 'Skip npm publish')
+  .option('-sgt --skip-git-tag', 'Skip git tag')
   .description('Release all packages and generate changelogs')
   .action(async (options) => release(options))
 
