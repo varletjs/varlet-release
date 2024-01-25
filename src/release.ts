@@ -43,9 +43,8 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
 
   if (!skipGitTag) {
     await execa('git', ['tag', `v${version}`])
+    await execa('git', ['push', remote, `v${version}`])
   }
-
-  await execa('git', ['push', remote, `v${version}`])
 
   const ret = await execa('git', ['push'])
   s.success({ text: 'Push remote repository successfully' })
