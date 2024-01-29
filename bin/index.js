@@ -14,6 +14,7 @@ program
 
 program
   .command('publish')
+  .option('-c --check-remote-version', 'Check remote version')
   .description('Publish to npm')
   .action(async () => publish())
 

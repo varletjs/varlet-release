@@ -68,8 +68,8 @@ npx vr publish
 | Params                 | Instructions        |
 | ---------------------- | ------------------- |
 | -r --remote \<remote\> | Specify remote name |
-| -s --skip-npm-publish  | Skip npm publish           |
-| -sgt --skip-git-tag  | Skip git tag  |
+| -s --skip-npm-publish  | Skip npm publish    |
+| -sgt --skip-git-tag    | Skip git tag        |
 
 #### changelog
 
@@ -89,9 +89,9 @@ npx vr publish
 
 #### publish
 
-```shell
-vr publish
-```
+| 参数                      | 说明                                                                                                                                             |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release |
 
 ### Custom Handle
 
@@ -120,7 +120,11 @@ release({ task })
 #### Types
 
 ```ts
-function publish(preRelease: boolean | undefined): Promise<void>
+interface PublishCommandOptions {
+  preRelease?: boolean
+  checkRemoteVersion?: boolean
+}
+function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions): Promise<void>
 function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
