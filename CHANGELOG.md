@@ -1,3 +1,13 @@
+## [0.2.3](https://github.com/varletjs/release/compare/v0.2.2...v0.2.3) (2024-01-30)
+
+
+### Features
+
+* Check if the npm package has a remote version ([#4](https://github.com/varletjs/release/issues/4)) ([88eab2d](https://github.com/varletjs/release/commit/88eab2d450681e05281a383224a75587520e3a77))
+* support --skip-changelog ([3856b4a](https://github.com/varletjs/release/commit/3856b4a41f5152d9ad3eb0c49673416c1228bbbb))
+
+
+
 ## [0.2.2](https://github.com/varletjs/release/compare/v0.2.1...v0.2.2) (2024-01-25)
 
 
