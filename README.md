@@ -69,6 +69,7 @@ npx vr publish
 | ---------------------- | ------------------- |
 | -r --remote \<remote\> | Specify remote name |
 | -s --skip-npm-publish  | Skip npm publish    |
+| -sc --skip-changelog    | Skip generate changelog    |
 | -sgt --skip-git-tag    | Skip git tag        |
 
 #### changelog
@@ -129,6 +130,7 @@ function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
   skipNpmPublish?: boolean
+  skipChangelog?: boolean
   skipGitTag?: boolean
   task?(): Promise<void>
 }

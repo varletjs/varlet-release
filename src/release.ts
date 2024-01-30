@@ -157,6 +157,7 @@ async function getReleaseType(): Promise<ReleaseType> {
 export interface ReleaseCommandOptions {
   remote?: string
   skipNpmPublish?: boolean
+  skipChangelog?: boolean
   skipGitTag?: boolean
   task?(): Promise<void>
 }
@@ -203,7 +204,9 @@ export async function release(options: ReleaseCommandOptions) {
     }
 
     if (!isPreRelease) {
-      await changelog()
+      if (!options.skipChangelog) {
+        await changelog()
+      }
       await pushGit(expectVersion, options.remote, options.skipGitTag)
     }
 
