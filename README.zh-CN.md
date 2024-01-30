@@ -68,8 +68,8 @@ npx vr publish
 | 参数                   | 说明             |
 | ---------------------- | ---------------- |
 | -r --remote \<remote\> | 指定远程仓库名称 |
-| -s --skip-npm-publish  | 跳过 npm 发布      |
-| -sgt --skip-git-tag  | 跳过 git tag      |
+| -s --skip-npm-publish  | 跳过 npm 发布    |
+| -sgt --skip-git-tag    | 跳过 git tag     |
 
 #### changelog
 
@@ -89,9 +89,9 @@ npx vr publish
 
 #### publish
 
-```shell
-vr publish
-```
+| 参数                      | 说明                                                                  |
+| ------------------------- | --------------------------------------------------------------------- |
+| -c --check-remote-version | 检测npm包的远程版本是否与要在本地发布的包版本相同，如果是，则跳过发布 |
 
 ### 自定义处理
 
@@ -120,7 +120,11 @@ release({ task })
 #### 类型
 
 ```ts
-function publish(preRelease: boolean | undefined): Promise<void>
+interface PublishCommandOptions {
+  preRelease?: boolean
+  checkRemoteVersion?: boolean
+}
+function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions): Promise<void>
 function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string

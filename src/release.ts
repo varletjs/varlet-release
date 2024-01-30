@@ -1,6 +1,6 @@
 import fse from 'fs-extra'
 import logger from './logger'
-import semver from 'semver'
+import semver, { type ReleaseType } from 'semver'
 import inquirer from 'inquirer'
 import { execa } from 'execa'
 import { createSpinner } from 'nanospinner'
@@ -19,9 +19,29 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
-export async function publish(preRelease: boolean | undefined) {
+interface PublishCommandOptions {
+  preRelease?: boolean
+  checkRemoteVersion?: boolean
+}
+export async function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions) {
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
+
+  if (checkRemoteVersion) {
+    const packageJson = getPackageJsons().find((packageJson) => !packageJson.config.private)
+    if (packageJson) {
+      const { config } = packageJson
+      try {
+        await execa('npm', ['view', `${config.name}@${config.version}`, 'version'])
+        s.warn({
+          text: `The npm package has a same remote version ${config.version}, publishing automatically skipped.`,
+        })
+        return
+      } catch {
+        /* empty */
+      }
+    }
+  }
 
   if (preRelease) {
     args.push('--tag', 'alpha')
@@ -51,16 +71,28 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   ret.stdout && logger.info(ret.stdout)
 }
 
+function getPackageJsons() {
+  const packageJsons = ['package.json', ...glob.sync('packages/*/package.json')]
+
+  return packageJsons.map((path) => {
+    const filePath = resolve(cwd, path)
+    return {
+      config: readJSONSync(filePath) as {
+        name: string
+        version: string
+        private: boolean
+      },
+      filePath,
+    }
+  })
+}
+
 export function updateVersion(version: string) {
-  const packageJsons = glob.sync('packages/*/package.json')
-  packageJsons.push('package.json')
+  const packageJsons = getPackageJsons()
 
-  packageJsons.forEach((path: string) => {
-    const file = resolve(cwd, path)
-    const config = readJSONSync(file)
-
+  packageJsons.forEach(({ config, filePath }) => {
     config.version = version
-    writeFileSync(file, JSON.stringify(config, null, 2))
+    writeFileSync(filePath, JSON.stringify(config, null, 2))
   })
 }
 
@@ -109,7 +141,7 @@ async function confirmRefs(remote = 'origin') {
   return ret[name]
 }
 
-async function getReleaseType() {
+async function getReleaseType(): Promise<ReleaseType> {
   const name = 'Please select release type'
   const ret = await prompt([
     {
@@ -167,7 +199,7 @@ export async function release(options: ReleaseCommandOptions) {
     }
 
     if (!options.skipNpmPublish) {
-      await publish(isPreRelease)
+      await publish({ preRelease: isPreRelease })
     }
 
     if (!isPreRelease) {
