@@ -25,33 +25,22 @@ interface PublishCommandOptions {
 }
 export async function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions) {
   const s = createSpinner('Publishing all packages').start()
-  const args = ['publish', '--no-git-checks', '--access', 'public']
+  const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
-  if (!checkRemoteVersion) {
-    args.unshift('-r')
-  } else {
-    const filterArgs: string[] = []
-    const packageJsons = getPackageJsons()
-
-    const result = await Promise.allSettled(
-      packageJsons.map((packageJson) => {
-        const { name, version } = packageJson.config
-        return execa('npm', ['view', `${name}@${version}`, 'version'])
-      }),
-    )
-    result.forEach((res, index) => {
-      if (res.status === 'fulfilled') {
-        const {
-          config: { name, version },
-          originPath,
-        } = packageJsons[index]
-
-        logger.warning(`The npm package ${name} has a remote version ${version}`)
-        filterArgs.push(`--filter=!"${originPath.startsWith('packages') ? `./${originPath}` : originPath}"`)
+  if (checkRemoteVersion) {
+    const packageJson = getPackageJsons().find((packageJson) => !packageJson.config.private)
+    if (packageJson) {
+      const { config } = packageJson
+      try {
+        await execa('npm', ['view', `${config.name}@${config.version}`, 'version'])
+        s.warn({
+          text: `The npm package has a same remote version ${config.version}, please check it https://www.npmjs.com/package/${config.name}?activeTab=versions`,
+        })
+        return
+      } catch {
+        /* empty */
       }
-    })
-
-    args.unshift('-r', ...filterArgs)
+    }
   }
 
   if (preRelease) {
@@ -83,8 +72,7 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
 }
 
 function getPackageJsons() {
-  const packageJsons = glob.sync('packages/*/package.json')
-  packageJsons.push('package.json')
+  const packageJsons = ['package.json', ...glob.sync('packages/*/package.json')]
 
   return packageJsons.map((path) => {
     const filePath = resolve(cwd, path)
@@ -95,7 +83,6 @@ function getPackageJsons() {
         private: boolean
       },
       filePath,
-      originPath: path,
     }
   })
 }
