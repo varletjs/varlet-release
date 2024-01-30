@@ -34,7 +34,7 @@ export async function publish({ preRelease, checkRemoteVersion }: PublishCommand
       try {
         await execa('npm', ['view', `${config.name}@${config.version}`, 'version'])
         s.warn({
-          text: `The npm package has a same remote version ${config.version}, please check it https://www.npmjs.com/package/${config.name}?activeTab=versions`,
+          text: `The npm package has a same remote version ${config.version}, publishing automatically skipped.`,
         })
         return
       } catch {
