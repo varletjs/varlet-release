@@ -10,12 +10,14 @@ program
   .option('-s --skip-npm-publish', 'Skip npm publish')
   .option('-sc --skip-changelog', 'Skip generate changelog')
   .option('-sgt --skip-git-tag', 'Skip git tag')
+  .option('-nt --npm-tag <npmTag>', 'Npm tag')
   .description('Release all packages and generate changelogs')
   .action(async (options) => release(options))
 
 program
   .command('publish')
   .option('-c --check-remote-version', 'Check remote version')
+  .option('-nt --npm-tag <npmTag>', 'Npm tag')
   .description('Publish to npm')
   .action(async (options) => publish(options))
 

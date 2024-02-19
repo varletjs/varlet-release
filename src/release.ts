@@ -19,11 +19,13 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
-interface PublishCommandOptions {
+export interface PublishCommandOptions {
   preRelease?: boolean
   checkRemoteVersion?: boolean
+  npmTag?: string
 }
-export async function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions) {
+
+export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions) {
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
@@ -45,6 +47,10 @@ export async function publish({ preRelease, checkRemoteVersion }: PublishCommand
 
   if (preRelease) {
     args.push('--tag', 'alpha')
+  }
+
+  if (npmTag) {
+    args.push('--tag', npmTag)
   }
 
   const ret = await execa('pnpm', args)
@@ -156,6 +162,7 @@ async function getReleaseType(): Promise<ReleaseType> {
 
 export interface ReleaseCommandOptions {
   remote?: string
+  npmTag?: string
   skipNpmPublish?: boolean
   skipChangelog?: boolean
   skipGitTag?: boolean
@@ -200,7 +207,7 @@ export async function release(options: ReleaseCommandOptions) {
     }
 
     if (!options.skipNpmPublish) {
-      await publish({ preRelease: isPreRelease })
+      await publish({ preRelease: isPreRelease, npmTag: options.npmTag })
     }
 
     if (!isPreRelease) {

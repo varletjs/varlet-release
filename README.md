@@ -71,6 +71,7 @@ npx vr publish
 | -s --skip-npm-publish  | Skip npm publish    |
 | -sc --skip-changelog    | Skip generate changelog    |
 | -sgt --skip-git-tag    | Skip git tag        |
+| -nt --npm-tag \<npmTag\>   | npm tag        |
 
 #### changelog
 
@@ -90,9 +91,10 @@ npx vr publish
 
 #### publish
 
-| 参数                      | 说明                                                                                                                                             |
+| Params                      | Instructions                                                                                                                                             |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release |
+| -nt --npm-tag \<npmTag\>   | npm tag        |
 
 ### Custom Handle
 
@@ -124,14 +126,16 @@ release({ task })
 interface PublishCommandOptions {
   preRelease?: boolean
   checkRemoteVersion?: boolean
+  npmTag?: string
 }
-function publish({ preRelease, checkRemoteVersion }: PublishCommandOptions): Promise<void>
+function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void>
 function updateVersion(version: string): void
 interface ReleaseCommandOptions {
   remote?: string
   skipNpmPublish?: boolean
   skipChangelog?: boolean
   skipGitTag?: boolean
+  npmTag?: string
   task?(): Promise<void>
 }
 function release(options: ReleaseCommandOptions): Promise<void>
