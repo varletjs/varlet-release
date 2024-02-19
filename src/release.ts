@@ -47,9 +47,7 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
 
   if (preRelease) {
     args.push('--tag', 'alpha')
-  }
-
-  if (npmTag) {
+  } else if (npmTag) {
     args.push('--tag', npmTag)
   }
 
