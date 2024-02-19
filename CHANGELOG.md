@@ -1,3 +1,12 @@
+## [0.2.4](https://github.com/varletjs/release/compare/v0.2.3...v0.2.4) (2024-02-19)
+
+
+### Features
+
+* support npmTag ([74a0c9a](https://github.com/varletjs/release/commit/74a0c9a235e97b8c1ed167faea54184fe7dfda48))
+
+
+
 ## [0.2.3](https://github.com/varletjs/release/compare/v0.2.2...v0.2.3) (2024-01-30)
 
 
