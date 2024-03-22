@@ -1,3 +1,12 @@
+## [0.2.6](https://github.com/varletjs/release/compare/v0.2.5...v0.2.6) (2024-03-22)
+
+
+### Features
+
+* **commitLint:** add merge and wip type ([#5](https://github.com/varletjs/release/issues/5)) ([026a51e](https://github.com/varletjs/release/commit/026a51e62fafe5391d3c9b1320ae33f76ea0d961))
+
+
+
 ## [0.2.5](https://github.com/varletjs/release/compare/v0.2.4...v0.2.5) (2024-02-19)
 
 
