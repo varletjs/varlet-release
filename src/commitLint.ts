@@ -5,7 +5,7 @@ import fse from 'fs-extra'
 const { readFileSync } = fse
 
 export const COMMIT_MESSAGE_RE =
-  /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor)(\(.+\))?!?: (.|\n)+/
+  /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor|merge|wip)(\(.+\))?!?: (.|\n)+/
 
 const ERROR_MESSAGE = 'Commit message invalid.'
 const WARNING_MESSAGE = `\
@@ -35,6 +35,8 @@ Allowed types:
 - release
 - refactor
 - revert
+- merge
+- wip
 
 Commit message reference: https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y
 参考阮一峰Commit message编写指南: https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html`
