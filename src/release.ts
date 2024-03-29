@@ -119,8 +119,8 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
   const ret = await prompt([
     {
       name,
-      type: 'confirm',
-      message: `All packages version ${currentVersion} -> ${expectVersion}:`,
+      type: 'list',
+      choices: [`All packages version ${currentVersion} -> ${expectVersion}:`, 'back'],
     },
   ])
 
@@ -189,13 +189,16 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    const type = await getReleaseType()
-    const isPreRelease = type.startsWith('pre')
-    let expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
-    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
+    let confirmVersionRet = 'back'
+    let isPreRelease = false
+    let expectVersion = ''
+    while (confirmVersionRet === 'back') {
+      const type = await getReleaseType()
+      isPreRelease = type.startsWith('pre')
+      expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
+      expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
 
-    if (!(await confirmVersion(currentVersion, expectVersion))) {
-      return
+      confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
     }
 
     updateVersion(expectVersion)
