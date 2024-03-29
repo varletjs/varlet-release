@@ -145,7 +145,7 @@ async function confirmRefs(remote = 'origin') {
   return ret[name]
 }
 
-async function getReleaseType(): Promise<ReleaseType> {
+async function getReleaseType() {
   const name = 'Please select release type'
   const ret = await prompt([
     {
@@ -155,7 +155,22 @@ async function getReleaseType(): Promise<ReleaseType> {
     },
   ])
 
-  return ret[name]
+  return ret[name] as ReleaseType
+}
+async function getReleaseVersion(currentVersion: string) {
+  let isPreRelease = false
+  let expectVersion = ''
+  let confirmVersionRet = ''
+  do {
+    const type = await getReleaseType()
+    isPreRelease = type.startsWith('pre')
+    expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
+    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
+
+    confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
+  } while (confirmVersionRet === 'back')
+
+  return { isPreRelease, expectVersion }
 }
 
 export interface ReleaseCommandOptions {
@@ -189,17 +204,7 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    let confirmVersionRet = 'back'
-    let isPreRelease = false
-    let expectVersion = ''
-    while (confirmVersionRet === 'back') {
-      const type = await getReleaseType()
-      isPreRelease = type.startsWith('pre')
-      expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
-      expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
-
-      confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
-    }
+    const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion)
 
     updateVersion(expectVersion)
 
