@@ -14,6 +14,8 @@ const { prompt } = inquirer
 
 const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch']
 
+const BACK_HINT = 'Back to previous step' as const
+
 async function isWorktreeEmpty() {
   const ret = await execa('git', ['status', '--porcelain'])
   return !ret.stdout
@@ -119,8 +121,8 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
   const ret = await prompt([
     {
       name,
-      type: 'confirm',
-      message: `All packages version ${currentVersion} -> ${expectVersion}:`,
+      type: 'list',
+      choices: [`All packages version ${currentVersion} -> ${expectVersion}:`, BACK_HINT],
     },
   ])
 
@@ -145,7 +147,7 @@ async function confirmRefs(remote = 'origin') {
   return ret[name]
 }
 
-async function getReleaseType(): Promise<ReleaseType> {
+async function getReleaseType() {
   const name = 'Please select release type'
   const ret = await prompt([
     {
@@ -155,7 +157,22 @@ async function getReleaseType(): Promise<ReleaseType> {
     },
   ])
 
-  return ret[name]
+  return ret[name] as ReleaseType
+}
+async function getReleaseVersion(currentVersion: string) {
+  let isPreRelease = false
+  let expectVersion = ''
+  let confirmVersionRet = ''
+  do {
+    const type = await getReleaseType()
+    isPreRelease = type.startsWith('pre')
+    expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
+    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
+
+    confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
+  } while (confirmVersionRet === BACK_HINT)
+
+  return { isPreRelease, expectVersion }
 }
 
 export interface ReleaseCommandOptions {
@@ -189,14 +206,7 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    const type = await getReleaseType()
-    const isPreRelease = type.startsWith('pre')
-    let expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
-    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
-
-    if (!(await confirmVersion(currentVersion, expectVersion))) {
-      return
-    }
+    const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion)
 
     updateVersion(expectVersion)
 
