@@ -14,6 +14,8 @@ const { prompt } = inquirer
 
 const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch']
 
+const BACK_HINT = 'Back to previous step' as const
+
 async function isWorktreeEmpty() {
   const ret = await execa('git', ['status', '--porcelain'])
   return !ret.stdout
@@ -120,7 +122,7 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
     {
       name,
       type: 'list',
-      choices: [`All packages version ${currentVersion} -> ${expectVersion}:`, 'back'],
+      choices: [`All packages version ${currentVersion} -> ${expectVersion}:`, BACK_HINT],
     },
   ])
 
@@ -168,7 +170,7 @@ async function getReleaseVersion(currentVersion: string) {
     expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
 
     confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
-  } while (confirmVersionRet === 'back')
+  } while (confirmVersionRet === BACK_HINT)
 
   return { isPreRelease, expectVersion }
 }
