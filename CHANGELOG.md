@@ -1,4 +1,13 @@
-## [0.2.6](https://github.com/varletjs/release/compare/v0.2.5...v0.2.6) (2024-03-22)
+## [0.2.7](https://github.com/varletjs/release/compare/v0.2.6...v0.2.7) (2024-4-1)
+
+
+### Features
+
+* multiple version confirmation is supported ([#6](https://github.com/varletjs/release/issues/6)) ([ba9ed65](https://github.com/varletjs/release/commit/ba9ed653cae7320dfe2f6c8d9de2f24ca93ef133))
+
+
+
+## [0.2.6](https://github.com/varletjs/release/compare/v0.2.5...v0.2.6) (2024-3-22)
 
 
 ### Features
@@ -7,7 +16,7 @@
 
 
 
-## [0.2.5](https://github.com/varletjs/release/compare/v0.2.4...v0.2.5) (2024-02-19)
+## [0.2.5](https://github.com/varletjs/release/compare/v0.2.4...v0.2.5) (2024-2-19)
 
 
 ### Bug Fixes
@@ -16,7 +25,7 @@
 
 
 
-## [0.2.4](https://github.com/varletjs/release/compare/v0.2.3...v0.2.4) (2024-02-19)
+## [0.2.4](https://github.com/varletjs/release/compare/v0.2.3...v0.2.4) (2024-2-19)
 
 
 ### Features
@@ -25,7 +34,7 @@
 
 
 
-## [0.2.3](https://github.com/varletjs/release/compare/v0.2.2...v0.2.3) (2024-01-30)
+## [0.2.3](https://github.com/varletjs/release/compare/v0.2.2...v0.2.3) (2024-1-30)
 
 
 ### Features
@@ -35,7 +44,7 @@
 
 
 
-## [0.2.2](https://github.com/varletjs/release/compare/v0.2.1...v0.2.2) (2024-01-25)
+## [0.2.2](https://github.com/varletjs/release/compare/v0.2.1...v0.2.2) (2024-1-25)
 
 
 ### Bug Fixes
@@ -44,7 +53,7 @@
 
 
 
-## [0.2.1](https://github.com/varletjs/release/compare/v0.2.0...v0.2.1) (2024-01-25)
+## [0.2.1](https://github.com/varletjs/release/compare/v0.2.0...v0.2.1) (2024-1-25)
 
 
 ### Features
@@ -53,7 +62,7 @@
 
 
 
-# [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-01-23)
+# [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-1-23)
 
 
 ### Features
@@ -79,7 +88,7 @@
 
 
 
-## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-07)
+## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-7)
 
 
 ### Features
@@ -88,7 +97,7 @@
 
 
 
-## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-07)
+## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-7)
 
 
 ### Features
