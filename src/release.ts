@@ -122,7 +122,7 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
     {
       name,
       type: 'list',
-      choices: [`All packages version ${currentVersion} -> ${expectVersion}:`, BACK_HINT],
+      choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT],
     },
   ])
 
