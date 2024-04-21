@@ -1,3 +1,12 @@
+## [0.2.9](https://github.com/varletjs/release/compare/v0.2.8...v0.2.9) (2024-4-21)
+
+
+### Features
+
+* ensure commit message path is provided for commit linting ([0eca4a1](https://github.com/varletjs/release/commit/0eca4a1cf0a600c96c805976988e9269233860a9))
+
+
+
 ## [0.2.8](https://github.com/varletjs/release/compare/v0.2.7...v0.2.8) (2024-4-9)
 
 
