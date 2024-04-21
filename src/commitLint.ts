@@ -64,6 +64,11 @@ export function commitLint(options: CommitLintCommandOptions) {
     warningMessage = WARNING_MESSAGE,
   } = options
 
+  if (!commitMessagePath) {
+    logger.error('commitMessagePath is required')
+    process.exit(1)
+  }
+
   const commitMessage = getCommitMessage(commitMessagePath)
   const isValidCommitMessage = new RegExp(commitMessageRe).test(commitMessage)
 
