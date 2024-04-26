@@ -11,23 +11,9 @@
 
 ## 介绍
 
-`Varlet Release` 是一个用于发布所有包、生成变更日志和检测 `commit message` 的工具。
+`Varlet Release` 是一个用于发布所有包、生成变更日志和检测 `commit message` 的工具，依赖于 `pnpm`。
 
 ## 安装
-
-### npm
-
-```shell
-npm i @varlet/release -D
-```
-
-### yarn
-
-```shell
-yarn add @varlet/release -D
-```
-
-### pnpm
 
 ```shell
 pnpm add @varlet/release -D
@@ -65,13 +51,14 @@ npx vr publish
 
 #### release
 
-| 参数                   | 说明             |
-| ---------------------- | ---------------- |
-| -r --remote \<remote\> | 指定远程仓库名称 |
-| -s --skip-npm-publish  | 跳过 npm 发布    |
-| -sc --skip-changelog    | 跳过生成变更日志     |
-| -sgt --skip-git-tag    | 跳过 git tag     |
-| -nt --npm-tag \<npmTag\>   | npm tag        |
+| 参数                      | 说明                                                                    |
+| ------------------------- | ----------------------------------------------------------------------- |
+| -r --remote \<remote\>    | 指定远程仓库名称                                                        |
+| -s --skip-npm-publish     | 跳过 npm 发布                                                           |
+| -c --check-remote-version | 检测 npm 包的远程版本是否与要在本地发布的包版本相同，如果是，则停止执行 |
+| -sc --skip-changelog      | 跳过生成变更日志                                                        |
+| -sgt --skip-git-tag       | 跳过 git tag                                                            |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                                 |
 
 #### changelog
 
@@ -94,7 +81,7 @@ npx vr publish
 | 参数                      | 说明                                                                  |
 | ------------------------- | --------------------------------------------------------------------- |
 | -c --check-remote-version | 检测npm包的远程版本是否与要在本地发布的包版本相同，如果是，则跳过发布 |
-| -nt --npm-tag \<npmTag\>   | npm tag        |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                               |
 
 ### 自定义处理
 

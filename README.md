@@ -11,23 +11,9 @@
 
 ## Intro
 
-`Varlet Release` is a tool to release all packages, generate changelogs and lint commit message.
+`Varlet Release` is a tool used for publishing all packages, generating change logs, and checking `commit messages`, relying on `pnpm`.
 
 ## Installation
-
-### npm
-
-```shell
-npm i @varlet/release -D
-```
-
-### yarn
-
-```shell
-yarn add @varlet/release -D
-```
-
-### pnpm
 
 ```shell
 pnpm add @varlet/release -D
@@ -65,13 +51,14 @@ npx vr publish
 
 #### release
 
-| Params                 | Instructions        |
-| ---------------------- | ------------------- |
-| -r --remote \<remote\> | Specify remote name |
-| -s --skip-npm-publish  | Skip npm publish    |
-| -sc --skip-changelog    | Skip generate changelog    |
-| -sgt --skip-git-tag    | Skip git tag        |
-| -nt --npm-tag \<npmTag\>   | npm tag        |
+| Params                    | Instructions                                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| -r --remote \<remote\>    | Specify remote name                                                                                                       |
+| -s --skip-npm-publish     | Skip npm publish                                                                                                          |
+| -c --check-remote-version | Check if the remote version of the npm package is the same as the one you want to publish locally, if so, stop execution. |
+| -sc --skip-changelog      | Skip generate changelog                                                                                                   |
+| -sgt --skip-git-tag       | Skip git tag                                                                                                              |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                   |
 
 #### changelog
 
@@ -91,10 +78,10 @@ npx vr publish
 
 #### publish
 
-| Params                      | Instructions                                                                                                                                             |
+| Params                    | Instructions                                                                                                                                     |
 | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
 | -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release |
-| -nt --npm-tag \<npmTag\>   | npm tag        |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                                          |
 
 ### Custom Handle
 

@@ -21,6 +21,27 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
+export async function isSameVersion(version?: string) {
+  const s = createSpinner('Check remote version...').start()
+
+  const packageJsones = getPackageJsons()
+  const packageJson = packageJsones.find((packageJson) => !packageJson.config.private) || packageJsones[0]
+  if (packageJson) {
+    const { config } = packageJson
+    try {
+      await execa('npm', ['view', `${config.name}@${version ?? config.version}`, 'version'])
+
+      s.warn({
+        text: `The npm package has a same remote version ${config.version}.`,
+      })
+      return true
+    } catch {
+      s.success()
+      return false
+    }
+  }
+}
+
 export interface PublishCommandOptions {
   preRelease?: boolean
   checkRemoteVersion?: boolean
@@ -31,20 +52,9 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
-  if (checkRemoteVersion) {
-    const packageJson = getPackageJsons().find((packageJson) => !packageJson.config.private)
-    if (packageJson) {
-      const { config } = packageJson
-      try {
-        await execa('npm', ['view', `${config.name}@${config.version}`, 'version'])
-        s.warn({
-          text: `The npm package has a same remote version ${config.version}, publishing automatically skipped.`,
-        })
-        return
-      } catch {
-        /* empty */
-      }
-    }
+  if (checkRemoteVersion && (await isSameVersion())) {
+    logger.error('publishing automatically skipped.')
+    return
   }
 
   if (preRelease) {
@@ -181,6 +191,7 @@ export interface ReleaseCommandOptions {
   skipNpmPublish?: boolean
   skipChangelog?: boolean
   skipGitTag?: boolean
+  checkRemoteVersion?: boolean
   task?(): Promise<void>
 }
 
@@ -207,6 +218,11 @@ export async function release(options: ReleaseCommandOptions) {
     }
 
     const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion)
+
+    if (options.checkRemoteVersion && (await isSameVersion(expectVersion))) {
+      logger.error('Please check remote version.')
+      return
+    }
 
     updateVersion(expectVersion)
 
