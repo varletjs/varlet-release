@@ -1,3 +1,12 @@
+## [0.2.10](https://github.com/varletjs/release/compare/v0.2.9...v0.2.10) (2024-4-26)
+
+
+### Features
+
+* add remote version check to release ([9136d75](https://github.com/varletjs/release/commit/9136d7529d970e1238ec9516879b841f9ba4329d))
+
+
+
 ## [0.2.9](https://github.com/varletjs/release/compare/v0.2.8...v0.2.9) (2024-4-21)
 
 
