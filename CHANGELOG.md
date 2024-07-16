@@ -1,3 +1,12 @@
+## [0.2.11](https://github.com/varletjs/release/compare/v0.2.10...v0.2.11) (2024-7-16)
+
+
+### Features
+
+* update release task function to accept version parameters ([e2b6ead](https://github.com/varletjs/release/commit/e2b6eadc3b2c9de5aa4341ee48ff21264c2c3a26))
+
+
+
 ## [0.2.10](https://github.com/varletjs/release/compare/v0.2.9...v0.2.10) (2024-4-26)
 
 
