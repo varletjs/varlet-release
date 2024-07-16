@@ -123,7 +123,7 @@ interface ReleaseCommandOptions {
   skipChangelog?: boolean
   skipGitTag?: boolean
   npmTag?: string
-  task?(): Promise<void>
+  task?(newVersion: string, oldVersion: string): Promise<void>
 }
 function release(options: ReleaseCommandOptions): Promise<void>
 

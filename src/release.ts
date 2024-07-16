@@ -192,7 +192,7 @@ export interface ReleaseCommandOptions {
   skipChangelog?: boolean
   skipGitTag?: boolean
   checkRemoteVersion?: boolean
-  task?(): Promise<void>
+  task?(newVersion: string, oldVersion: string): Promise<void>
 }
 
 export async function release(options: ReleaseCommandOptions) {
@@ -227,7 +227,7 @@ export async function release(options: ReleaseCommandOptions) {
     updateVersion(expectVersion)
 
     if (options.task) {
-      await options.task()
+      await options.task(expectVersion, currentVersion)
     }
 
     if (!options.skipNpmPublish) {
