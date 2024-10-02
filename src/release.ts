@@ -1,7 +1,7 @@
 import fse from 'fs-extra'
 import logger from './logger'
 import semver, { type ReleaseType } from 'semver'
-import inquirer from 'inquirer'
+import { confirm, select } from '@inquirer/prompts'
 import { execa } from 'execa'
 import { createSpinner } from 'nanospinner'
 import { glob } from 'glob'
@@ -10,7 +10,6 @@ import { changelog } from './changelog.js'
 
 const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse
-const { prompt } = inquirer
 
 const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch']
 
@@ -114,29 +113,23 @@ export function updateVersion(version: string) {
 
 async function confirmRegistry() {
   const registry = (await execa('npm', ['config', 'get', 'registry'])).stdout
-  const name = 'Registry confirm'
-  const ret = await prompt([
-    {
-      name,
-      type: 'confirm',
-      message: `Current registry is: ${registry}`,
-    },
-  ])
+  const ret = await confirm({
+    message: `Current registry is: ${registry}`,
+  })
 
-  return ret[name]
+  return ret
 }
 
 async function confirmVersion(currentVersion: string, expectVersion: string) {
-  const name = 'Version confirm'
-  const ret = await prompt([
-    {
-      name,
-      type: 'list',
-      choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT],
-    },
-  ])
+  const ret = await select({
+    message: 'Version confirm',
+    choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map((value) => ({
+      name: value,
+      value,
+    })),
+  })
 
-  return ret[name]
+  return ret
 }
 
 async function confirmRefs(remote = 'origin') {
@@ -145,29 +138,20 @@ async function confirmRefs(remote = 'origin') {
   const repo = stdout.match(reg)?.[1]
   const { stdout: branch } = await execa('git', ['branch', '--show-current'])
 
-  const name = 'Refs confirm'
-  const ret = await prompt([
-    {
-      name,
-      type: 'confirm',
-      message: `Current refs ${repo}:refs/for/${branch}`,
-    },
-  ])
+  const ret = await confirm({
+    message: `Current refs ${repo}:refs/for/${branch}`,
+  })
 
-  return ret[name]
+  return ret
 }
 
 async function getReleaseType() {
-  const name = 'Please select release type'
-  const ret = await prompt([
-    {
-      name,
-      type: 'list',
-      choices: releaseTypes,
-    },
-  ])
+  const releaseType = await select({
+    message: 'Please select release type',
+    choices: releaseTypes.map((type) => ({ name: type, value: type })),
+  })
 
-  return ret[name] as ReleaseType
+  return releaseType as ReleaseType
 }
 async function getReleaseVersion(currentVersion: string) {
   let isPreRelease = false
