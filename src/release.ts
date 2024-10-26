@@ -2,7 +2,7 @@ import fse from 'fs-extra'
 import logger from './logger'
 import semver, { type ReleaseType } from 'semver'
 import { confirm, select } from '@inquirer/prompts'
-import { x } from 'tinyexec'
+import { x as exec } from 'tinyexec'
 import { createSpinner } from 'nanospinner'
 import { glob } from 'glob'
 import { resolve } from 'path'
@@ -16,7 +16,7 @@ const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'pat
 const BACK_HINT = 'Back to previous step' as const
 
 async function isWorktreeEmpty() {
-  const ret = await x('git', ['status', '--porcelain'])
+  const ret = await exec('git', ['status', '--porcelain'])
   return !ret.stdout
 }
 
@@ -28,7 +28,9 @@ export async function isSameVersion(version?: string) {
   if (packageJson) {
     const { config } = packageJson
     try {
-      await x('npm', ['view', `${config.name}@${version ?? config.version}`, 'version'])
+      await exec('npm', ['view', `${config.name}@${version ?? config.version}`, 'version'], {
+        throwOnError: true,
+      })
 
       s.warn({
         text: `The npm package has a same remote version ${config.version}.`,
@@ -62,7 +64,7 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
     args.push('--tag', npmTag)
   }
 
-  const ret = await x('pnpm', args)
+  const ret = await exec('pnpm', args)
   if (ret.stderr && ret.stderr.includes('npm ERR!')) {
     throw new Error('\n' + ret.stderr)
   } else {
@@ -73,15 +75,25 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
 
 async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   const s = createSpinner('Pushing to remote git repository').start()
-  await x('git', ['add', '.'])
-  await x('git', ['commit', '-m', `v${version}`])
+  await exec('git', ['add', '.'], {
+    throwOnError: true,
+  })
+  await exec('git', ['commit', '-m', `v${version}`], {
+    throwOnError: true,
+  })
 
   if (!skipGitTag) {
-    await x('git', ['tag', `v${version}`])
-    await x('git', ['push', remote, `v${version}`])
+    await exec('git', ['tag', `v${version}`], {
+      throwOnError: true,
+    })
+    await exec('git', ['push', remote, `v${version}`], {
+      throwOnError: true,
+    })
   }
 
-  const ret = await x('git', ['push'])
+  const ret = await exec('git', ['push'], {
+    throwOnError: true,
+  })
   s.success({ text: 'Push remote repository successfully' })
   ret.stdout && logger.info(ret.stdout)
 }
@@ -112,7 +124,7 @@ export function updateVersion(version: string) {
 }
 
 async function confirmRegistry() {
-  const registry = (await x('npm', ['config', 'get', 'registry'])).stdout
+  const registry = (await exec('npm', ['config', 'get', 'registry'])).stdout
   const ret = await confirm({
     message: `Current registry is: ${registry}`,
   })
@@ -133,10 +145,10 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
 }
 
 async function confirmRefs(remote = 'origin') {
-  const { stdout } = await x('git', ['remote', '-v'])
+  const { stdout } = await exec('git', ['remote', '-v'])
   const reg = new RegExp(`${remote}\t(.*) \\(push`)
   const repo = stdout.match(reg)?.[1]
-  const { stdout: branch } = await x('git', ['branch', '--show-current'])
+  const { stdout: branch } = await exec('git', ['branch', '--show-current'])
 
   const ret = await confirm({
     message: `Current refs ${repo}:refs/for/${branch}`,
@@ -229,13 +241,17 @@ export async function release(options: ReleaseCommandOptions) {
 
     if (isPreRelease) {
       try {
-        await x('git', ['restore', '**/package.json'])
+        await exec('git', ['restore', '**/package.json'], {
+          throwOnError: true,
+        })
       } catch {
         /* empty */
       }
 
       try {
-        await x('git', ['restore', 'package.json'])
+        await exec('git', ['restore', 'package.json'], {
+          throwOnError: true,
+        })
       } catch {
         /* empty */
       }
