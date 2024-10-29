@@ -11,7 +11,7 @@ import { changelog } from './changelog.js'
 const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse
 
-const releaseTypes = ['premajor', 'preminor', 'prepatch', 'major', 'minor', 'patch']
+const releaseTypes = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
 
 const BACK_HINT = 'Back to previous step' as const
 
