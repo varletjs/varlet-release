@@ -36,6 +36,7 @@
     "build": "tsup",
     "release": "pnpm build && node bin/index.js release -c",
     "lint": "eslint --ext .ts,.js",
+    "format": "prettier --write .",
     "commit-lint": "node bin/index.js commit-lint"
   },
   "simple-git-hooks": {
