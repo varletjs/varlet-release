@@ -15,7 +15,7 @@
     "url": "git+https://github.com/varletjs/release"
   },
   "bugs": "https://github.com/varletjs/release/issues",
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
@@ -35,7 +35,7 @@
     "dev": "tsup --watch",
     "build": "tsup",
     "release": "pnpm build && node bin/index.js release -c",
-    "lint": "eslint --ext .ts,.js",
+    "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write .",
     "commit-lint": "node bin/index.js commit-lint"
   },
