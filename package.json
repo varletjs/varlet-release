@@ -44,8 +44,10 @@
     "commit-msg": "pnpm run commit-lint -p $1"
   },
   "lint-staged": {
-    "*.{ts,tsx,js,vue,less}": "prettier --write",
-    "*.{ts,tsx,js,vue}": "eslint --fix"
+    "*.{ts,js}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "packageManager": "pnpm@9.0.1",
   "engines": {
