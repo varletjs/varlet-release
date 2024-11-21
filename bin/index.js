@@ -42,6 +42,6 @@ program
   .option('-e --errorMessage <message>', 'Validation failed to display error messages')
   .option('-w --warningMessage <message>', 'Validation failed to display warning messages')
   .description('Lint commit message')
-  .action(async (option) => commitLint(option))
+  .action((option) => commitLint(option))
 
 program.parse()
