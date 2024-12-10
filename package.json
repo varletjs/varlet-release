@@ -2,11 +2,12 @@
   "name": "@varlet/release",
   "type": "module",
   "version": "0.3.1",
-  "description": "release all packages and generate changelogs",
+  "description": "publish all packages, generate changelogs and check commit messages",
   "keywords": [
     "varlet",
     "release",
-    "changelog"
+    "changelog",
+    "commit-lint"
   ],
   "author": "clencat <2091927351@qq.com>",
   "license": "MIT",
