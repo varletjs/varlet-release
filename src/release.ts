@@ -209,7 +209,7 @@ export async function release(options: ReleaseCommandOptions) {
       return
     }
 
-    if (!(await confirmRegistry())) {
+    if (!options.skipNpmPublish && !(await confirmRegistry())) {
       return
     }
 
