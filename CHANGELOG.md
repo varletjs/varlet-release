@@ -1,4 +1,13 @@
-# [0.3.1](https://github.com/varletjs/release/compare/v0.3.0...v0.3.1) (2024-11-02)
+## [0.3.2](https://github.com/varletjs/release/compare/v0.3.1...v0.3.2) (2024-12-24)
+
+
+### Bug Fixes
+
+* skip confirm registry when skipNpmPublish is true ([#23](https://github.com/varletjs/release/issues/23)) ([ea20a40](https://github.com/varletjs/release/commit/ea20a40c191ba62c96b7e9c1522c3adb0ad42ccf))
+
+
+
+## [0.3.1](https://github.com/varletjs/release/compare/v0.3.0...v0.3.1) (2024-11-02)
 
 
 

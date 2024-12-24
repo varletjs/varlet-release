@@ -1,7 +1,7 @@
 {
   "name": "@varlet/release",
   "type": "module",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "publish all packages, generate changelogs and check commit messages",
   "keywords": [
     "varlet",
