@@ -13,7 +13,4 @@ export default {
   error(text: string) {
     console.log(pico.red(text))
   },
-  title(text: string) {
-    console.log(pico.cyan(text))
-  },
 }
