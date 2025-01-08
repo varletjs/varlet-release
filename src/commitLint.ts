@@ -1,6 +1,6 @@
-import logger from './logger.js'
-import semver from 'semver'
 import fse from 'fs-extra'
+import semver from 'semver'
+import logger from './logger.js'
 
 const { readFileSync } = fse
 
