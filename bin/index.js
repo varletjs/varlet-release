@@ -31,6 +31,7 @@ program
   .command('changelog')
   .option('-rc --releaseCount <releaseCount>', 'Release count')
   .option('-f --file <file>', 'Changelog filename')
+  .option('-p --preset <preset>', 'Changelog preset')
   .description('Generate changelog')
   .action((options) => changelog(options))
 

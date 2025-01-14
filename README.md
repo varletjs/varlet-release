@@ -66,6 +66,7 @@ npx vr publish
 | ----------------------------------- | -------------------------- |
 | -f --file \<filename\>              | Specify changelog filename |
 | -rc --releaseCount \<releaseCount\> | Release count              |
+| -p --preset \<preset\>              | Specify changelog preset   |
 
 #### lint-commit
 
@@ -130,8 +131,18 @@ function release(options: ReleaseCommandOptions): Promise<void>
 interface ChangelogCommandOptions {
   file?: string
   releaseCount?: number
+  preset?:
+    | 'angular'
+    | 'atom'
+    | 'codemirror'
+    | 'conventionalcommits'
+    | 'ember'
+    | 'eslint'
+    | 'express'
+    | 'jquery'
+    | 'jshint'
 }
-function changelog({ releaseCount, file }?: ChangelogCommandOptions): Promise<void>
+function changelog({ releaseCount, file, preset }?: ChangelogCommandOptions): Promise<void>
 
 const COMMIT_MESSAGE_RE: RegExp
 function isVersionCommitMessage(message: string): string | false | null
