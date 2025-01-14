@@ -88,7 +88,7 @@ npx vr publish
 #### Example
 
 ```js
-import { release, changelog } from '@varlet/release'
+import { changelog, release } from '@varlet/release'
 
 // Do what you want to do...
 release()
@@ -97,7 +97,7 @@ release()
 You can pass in a task that will be called before the publish after the package version is changed.
 
 ```js
-import { release, changelog } from '@varlet/release'
+import { changelog, release } from '@varlet/release'
 
 async function task() {
   await doSomething1()
