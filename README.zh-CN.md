@@ -88,7 +88,7 @@ npx vr publish
 #### 示例
 
 ```js
-import { release, changelog } from '@varlet/release'
+import { changelog, release } from '@varlet/release'
 
 // Do what you want to do...
 release()
@@ -97,7 +97,7 @@ release()
 你可以传入一个 `task`，在包版本更改后，在发布之前会调用 `task`。
 
 ```js
-import { release, changelog } from '@varlet/release'
+import { changelog, release } from '@varlet/release'
 
 async function task() {
   await doSomething1()
