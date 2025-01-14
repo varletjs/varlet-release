@@ -147,4 +147,4 @@ function commitLint(options: CommitLintCommandOptions): void
 
 ## License
 
-[MIT](https://github.com/varletjs/release/blob/main/LICENCE)
+[MIT](https://github.com/varletjs/release/blob/main/LICENSE)

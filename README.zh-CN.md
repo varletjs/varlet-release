@@ -145,6 +145,6 @@ interface CommitLintCommandOptions {
 function commitLint(options: CommitLintCommandOptions): void
 ```
 
-## License
+## 许可证
 
 [MIT](https://github.com/varletjs/release/blob/main/LICENSE)
