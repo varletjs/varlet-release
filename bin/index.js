@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-import { release, publish, changelog, commitLint } from '../dist/index.js'
 import { Command } from 'commander'
 import fse from 'fs-extra'
+import { changelog, commitLint, publish, release } from '../dist/index.js'
 
 const program = new Command()
 
@@ -18,21 +18,21 @@ program
   .option('-nt --npm-tag <npmTag>', 'Npm tag')
   .option('-c --check-remote-version', 'Check remote version')
   .description('Release all packages and generate changelogs')
-  .action(async (options) => release(options))
+  .action((options) => release(options))
 
 program
   .command('publish')
   .option('-c --check-remote-version', 'Check remote version')
   .option('-nt --npm-tag <npmTag>', 'Npm tag')
   .description('Publish to npm')
-  .action(async (options) => publish(options))
+  .action((options) => publish(options))
 
 program
   .command('changelog')
   .option('-rc --releaseCount <releaseCount>', 'Release count')
   .option('-f --file <file>', 'Changelog filename')
   .description('Generate changelog')
-  .action(async (options) => changelog(options))
+  .action((options) => changelog(options))
 
 program
   .command('commit-lint')
