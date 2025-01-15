@@ -1,3 +1,9 @@
+## [0.3.3](https://github.com/varletjs/release/compare/v0.3.2...v0.3.3) (2025-01-15)
+
+### Features
+
+- support changelog preset ([#28](https://github.com/varletjs/release/issues/28)) ([9daf25c](https://github.com/varletjs/release/commit/9daf25cf58bfb55034118344f8c900d3f1e58820))
+
 ## [0.3.2](https://github.com/varletjs/release/compare/v0.3.1...v0.3.2) (2024-12-24)
 
 ### Bug Fixes
