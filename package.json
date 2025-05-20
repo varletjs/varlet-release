@@ -39,7 +39,8 @@
     "dev": "tsup --watch",
     "format": "prettier --write .",
     "lint": "eslint --fix .",
-    "release": "pnpm build && node bin/index.js release -c"
+    "release": "pnpm build && node bin/index.js release -c",
+    "type-check": "tsc --noEmit"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
@@ -59,13 +60,13 @@
     "fs-extra": "^11.1.1",
     "glob": "^10.3.10",
     "nanospinner": "^1.1.0",
-    "picocolors": "^1.0.0",
+    "rslog": "^1.2.3",
     "semver": "^7.5.4",
     "tinyexec": "^0.3.0"
   },
   "devDependencies": {
-    "@configurajs/eslint": "^0.1.0",
-    "@configurajs/prettier": "^0.1.1",
+    "@configurajs/eslint": "^0.1.2",
+    "@configurajs/prettier": "^0.1.4",
     "@types/conventional-changelog": "^3.1.5",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^20.9.0",

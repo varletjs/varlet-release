@@ -3,10 +3,10 @@ import { confirm, select } from '@inquirer/prompts'
 import fse from 'fs-extra'
 import { glob } from 'glob'
 import { createSpinner } from 'nanospinner'
+import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
 import { changelog } from './changelog.js'
-import logger from './logger'
 
 const cwd = process.cwd()
 const { writeFileSync, readJSONSync } = fse

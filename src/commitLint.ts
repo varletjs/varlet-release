@@ -1,6 +1,6 @@
 import fse from 'fs-extra'
+import { logger } from 'rslog'
 import semver from 'semver'
-import logger from './logger.js'
 
 const { readFileSync } = fse
 
@@ -74,7 +74,7 @@ export function commitLint(options: CommitLintCommandOptions) {
 
   if (!isVersionCommitMessage(commitMessage) && !isValidCommitMessage) {
     logger.error(errorMessage)
-    logger.warning(warningMessage)
+    logger.warn(warningMessage)
     process.exit(1)
   }
 }
