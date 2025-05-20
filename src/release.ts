@@ -73,14 +73,17 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
   }
 }
 
-async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
+async function pushGit(version: string, remote = 'origin', skipGitTag = false, skipGitCommit = false) {
   const s = createSpinner('Pushing to remote git repository').start()
   await exec('git', ['add', '.'], {
     throwOnError: true,
   })
-  await exec('git', ['commit', '-m', `v${version}`], {
-    throwOnError: true,
-  })
+
+  if (!skipGitCommit) {
+    await exec('git', ['commit', '-m', `v${version}`], {
+      throwOnError: true,
+    })
+  }
 
   if (!skipGitTag) {
     await exec('git', ['tag', `v${version}`], {
@@ -187,6 +190,7 @@ export interface ReleaseCommandOptions {
   skipNpmPublish?: boolean
   skipChangelog?: boolean
   skipGitTag?: boolean
+  skipGitCommit?: boolean
   checkRemoteVersion?: boolean
   task?(newVersion: string, oldVersion: string): Promise<void>
 }
@@ -234,7 +238,7 @@ export async function release(options: ReleaseCommandOptions) {
       if (!options.skipChangelog) {
         await changelog()
       }
-      await pushGit(expectVersion, options.remote, options.skipGitTag)
+      await pushGit(expectVersion, options.remote, options.skipGitTag, options.skipGitCommit)
     }
 
     logger.success(`Release version ${expectVersion} successfully!`)
