@@ -26,9 +26,6 @@ importers:
       nanospinner:
         specifier: ^1.1.0
         version: 1.1.0
-      picocolors:
-        specifier: ^1.0.0
-        version: 1.0.0
       rslog:
         specifier: ^1.2.3
         version: 1.2.3
