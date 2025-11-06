@@ -69,7 +69,7 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
     throw new Error('\n' + ret.stderr)
   } else {
     s.success({ text: 'Publish all packages successfully' })
-    ret.stdout && logger.info(ret.stdout)
+    ret.stdout && logger.log(ret.stdout)
   }
 }
 
@@ -95,7 +95,7 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
     throwOnError: true,
   })
   s.success({ text: 'Push remote repository successfully' })
-  ret.stdout && logger.info(ret.stdout)
+  ret.stdout && logger.log(ret.stdout)
 }
 
 function getPackageJsons() {
