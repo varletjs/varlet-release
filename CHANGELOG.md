@@ -1,3 +1,9 @@
+## [0.4.2](https://github.com/varletjs/release/compare/v0.4.1...v0.4.2) (2025-11-06)
+
+### Code Refactoring
+
+- **release:** Better display of log information ([4054a7e](https://github.com/varletjs/release/commit/4054a7e2388ec863c61ee9a4136d50bb78398704))
+
 ## [0.4.1](https://github.com/varletjs/release/compare/v0.4.0...v0.4.1) (2025-05-21)
 
 ### Features
