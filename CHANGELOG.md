@@ -1,3 +1,5 @@
+## [0.4.3](https://github.com/varletjs/release/compare/v0.4.2...v0.4.3) (2025-11-16)
+
 ## [0.4.2](https://github.com/varletjs/release/compare/v0.4.1...v0.4.2) (2025-11-06)
 
 ### Code Refactoring
