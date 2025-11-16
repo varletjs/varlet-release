@@ -33,7 +33,7 @@ export async function isSameVersion(version?: string) {
       })
 
       s.warn({
-        text: `The npm package has a same remote version ${config.version}.`,
+        text: `The npm package has a same remote version ${version ?? config.version}.`,
       })
       return true
     } catch {
@@ -64,13 +64,9 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
     args.push('--tag', npmTag)
   }
 
-  const ret = await exec('pnpm', args)
-  if (ret.stderr && ret.stderr.includes('npm ERR!')) {
-    throw new Error('\n' + ret.stderr)
-  } else {
-    s.success({ text: 'Publish all packages successfully' })
-    ret.stdout && logger.log(ret.stdout)
-  }
+  const ret = await exec('pnpm', args, { throwOnError: true })
+  s.success({ text: 'Publish all packages successfully' })
+  ret.stdout && logger.log(ret.stdout)
 }
 
 async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
