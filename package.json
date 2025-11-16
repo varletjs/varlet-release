@@ -1,6 +1,6 @@
 {
   "name": "@varlet/release",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "publish all packages, generate changelogs and check commit messages",
   "keywords": [
     "varlet",
