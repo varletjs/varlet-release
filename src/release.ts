@@ -24,8 +24,7 @@ export async function isSameVersion(version?: string): Promise<boolean | undefin
   const s = createSpinner('Check remote version...').start()
 
   const packageJsones = getPackageJsons()
-  const packageJson =
-    packageJsones.find((packageJson) => !packageJson.config.private) || packageJsones[0]
+  const packageJson = packageJsones.find((packageJson) => !packageJson.config.private) || packageJsones[0]
   if (packageJson) {
     const { config } = packageJson
     try {
@@ -50,11 +49,7 @@ export interface PublishCommandOptions {
   npmTag?: string
 }
 
-export async function publish({
-  preRelease,
-  checkRemoteVersion,
-  npmTag,
-}: PublishCommandOptions): Promise<void> {
+export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void> {
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
@@ -136,12 +131,10 @@ async function confirmRegistry() {
 async function confirmVersion(currentVersion: string, expectVersion: string) {
   const ret = await select({
     message: 'Version confirm',
-    choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map(
-      (value) => ({
-        name: value,
-        value,
-      }),
-    ),
+    choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map((value) => ({
+      name: value,
+      value,
+    })),
   })
 
   return ret

@@ -9,34 +9,46 @@
     "varlet"
   ],
   "bugs": "https://github.com/varletjs/release/issues",
-  "license": "MIT",
-  "author": "clencat <2091927351@qq.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/varletjs/release"
   },
-  "bin": {
-    "vr": "bin/index.js"
-  },
-  "files": [
-    "dist"
-  ],
+  "license": "MIT",
+  "author": "clencat <2091927351@qq.com>",
   "type": "module",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     }
   },
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "vr": "bin/index.js"
+  },
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsdown",
     "clean": "rimraf node_modules dist",
     "commit-lint": "node bin/index.js commit-lint",
     "dev": "tsdown --watch",
-    "format": "oxlint --fix && oxfmt",
-    "lint": "oxlint --type-aware --type-check && oxfmt --check",
-    "release": "pnpm build && node bin/index.js release -c"
+    "format": "eslint . --fix && prettier --write .",
+    "lint": "eslint . && prettier --check .",
+    "release": "pnpm build && node bin/index.js release -c",
+    "type-check": "tsc --noEmit"
+  },
+  "simple-git-hooks": {
+    "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
+    "commit-msg": "pnpm run commit-lint -p $1"
+  },
+  "lint-staged": {
+    "*.{md}": "prettier --write",
+    "*.{ts}": [
+      "prettier --write",
+      "eslint --fix"
+    ]
   },
   "dependencies": {
     "@inquirer/prompts": "^8.2.0",
@@ -50,32 +62,25 @@
     "tinyexec": "^1.0.2"
   },
   "devDependencies": {
+    "@configurajs/eslint": "^0.1.2",
+    "@configurajs/prettier": "^0.1.4",
+    "@ianvs/prettier-plugin-sort-imports": "^4.7.1",
     "@types/conventional-changelog": "^3.1.5",
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.14.0",
     "@types/semver": "^7.5.5",
+    "eslint": "^9.39.2",
     "lint-staged": "^16.2.7",
-    "oxfmt": "^0.28.0",
-    "oxlint": "^1.43.0",
-    "oxlint-tsgolint": "^0.11.4",
+    "prettier": "^3.8.1",
+    "prettier-plugin-tailwindcss": "^0.7.2",
     "rimraf": "^6.1.2",
     "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.20.3",
     "typescript": "^5.9.3"
   },
-  "simple-git-hooks": {
-    "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
-    "commit-msg": "pnpm run commit-lint -p $1"
-  },
-  "lint-staged": {
-    "*.{ts,js}": [
-      "oxfmt",
-      "oxlint --fix"
-    ]
-  },
+  "packageManager": "pnpm@10.28.2",
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
     "pnpm": ">=10.0"
-  },
-  "packageManager": "pnpm@10.28.2"
+  }
 }
