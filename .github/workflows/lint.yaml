@@ -12,10 +12,10 @@ jobs:
       - name: Install pnpm
         run: corepack enable
 
-      - name: Set node version to 18
-        uses: actions/setup-node@v3
+      - name: Set node version to 22
+        uses: actions/setup-node@v6
         with:
-          node-version: '18'
+          node-version: '22'
           cache: 'pnpm'
 
       - name: Install dependencies
@@ -23,6 +23,3 @@ jobs:
 
       - name: Lint
         run: pnpm lint
-
-      - name: Type Check
-        run: pnpm type-check

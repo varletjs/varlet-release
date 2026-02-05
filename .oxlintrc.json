@@ -1,0 +1,18 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["import"],
+  "categories": {
+    "correctness": "off"
+  },
+  "env": {
+    "builtin": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "**/node_modules",
+    "**/dist",
+    "**/pnpm-lock.yaml",
+    "**/.vscode",
+    "**/CHANGELOG*.md"
+  ]
+}

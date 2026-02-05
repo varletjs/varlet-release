@@ -3,44 +3,65 @@
   "version": "0.4.4",
   "description": "publish all packages, generate changelogs and check commit messages",
   "keywords": [
-    "varlet",
-    "release",
     "changelog",
-    "commit-lint"
+    "commit-lint",
+    "release",
+    "varlet"
   ],
   "bugs": "https://github.com/varletjs/release/issues",
+  "license": "MIT",
+  "author": "clencat <2091927351@qq.com>",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/varletjs/release"
   },
-  "license": "MIT",
-  "author": "clencat <2091927351@qq.com>",
-  "type": "module",
-  "exports": {
-    ".": {
-      "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "require": "./dist/index.cjs"
-    }
-  },
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "bin": {
     "vr": "bin/index.js"
   },
   "files": [
     "dist"
   ],
+  "type": "module",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
   "scripts": {
-    "build": "tsup",
+    "build": "tsdown",
     "clean": "rimraf node_modules dist",
     "commit-lint": "node bin/index.js commit-lint",
-    "dev": "tsup --watch",
-    "format": "prettier --write .",
-    "lint": "eslint --fix .",
-    "release": "pnpm build && node bin/index.js release -c",
-    "type-check": "tsc --noEmit"
+    "dev": "tsdown --watch",
+    "format": "oxlint --fix && oxfmt",
+    "lint": "oxlint --type-aware --type-check && oxfmt --check",
+    "release": "pnpm build && node bin/index.js release -c"
+  },
+  "dependencies": {
+    "@inquirer/prompts": "^8.2.0",
+    "commander": "^11.1.0",
+    "conventional-changelog": "^5.1.0",
+    "fs-extra": "^11.3.3",
+    "glob": "^10.3.10",
+    "nanospinner": "^1.2.2",
+    "rslog": "^2.0.0",
+    "semver": "^7.5.4",
+    "tinyexec": "^1.0.2"
+  },
+  "devDependencies": {
+    "@types/conventional-changelog": "^3.1.5",
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^22.14.0",
+    "@types/semver": "^7.5.5",
+    "lint-staged": "^16.2.7",
+    "oxfmt": "^0.28.0",
+    "oxlint": "^1.43.0",
+    "oxlint-tsgolint": "^0.11.4",
+    "rimraf": "^6.1.2",
+    "simple-git-hooks": "^2.13.1",
+    "tsdown": "^0.20.3",
+    "typescript": "^5.9.3"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm exec lint-staged --allow-empty --concurrent false",
@@ -48,41 +69,14 @@
   },
   "lint-staged": {
     "*.{ts,js}": [
-      "prettier --write",
-      "eslint --fix"
+      "oxfmt",
+      "oxlint --fix"
     ],
-    "*.md": "prettier --write"
+    "*.md": "oxfmt"
   },
-  "dependencies": {
-    "@inquirer/prompts": "^6.0.1",
-    "commander": "^11.1.0",
-    "conventional-changelog": "^5.1.0",
-    "fs-extra": "^11.1.1",
-    "glob": "^10.3.10",
-    "nanospinner": "^1.1.0",
-    "rslog": "^1.2.3",
-    "semver": "^7.5.4",
-    "tinyexec": "^0.3.0"
-  },
-  "devDependencies": {
-    "@configurajs/eslint": "^0.1.2",
-    "@configurajs/prettier": "^0.1.4",
-    "@types/conventional-changelog": "^3.1.5",
-    "@types/fs-extra": "^11.0.4",
-    "@types/node": "^20.9.0",
-    "@types/semver": "^7.5.5",
-    "@varlet/eslint-config": "^2.18.4",
-    "eslint": "^9.17.0",
-    "lint-staged": "^15.2.0",
-    "prettier": "^3.1.0",
-    "rimraf": "^6.0.1",
-    "simple-git-hooks": "^2.9.0",
-    "tsup": "^8.3.0",
-    "typescript": "^5.2.2"
-  },
-  "packageManager": "pnpm@9.0.1",
   "engines": {
-    "node": ">=16.0.0",
-    "pnpm": ">=9.0"
-  }
+    "node": "^20.19.0 || >=22.12.0",
+    "pnpm": ">=10.0"
+  },
+  "packageManager": "pnpm@10.28.2"
 }

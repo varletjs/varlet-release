@@ -11,7 +11,8 @@
     "lib": ["esnext", "dom"],
     "module": "esnext",
     "moduleResolution": "node",
-    "outDir": "./lib"
+    "outDir": "./lib",
+    "isolatedDeclarations": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]
