@@ -71,8 +71,7 @@
     "*.{ts,js}": [
       "oxfmt",
       "oxlint --fix"
-    ],
-    "*.md": "oxfmt"
+    ]
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
