@@ -72,6 +72,7 @@
     "eslint": "^9.39.2",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
+    "prettier-plugin-packagejson": "^3.0.0",
     "prettier-plugin-tailwindcss": "^0.7.2",
     "rimraf": "^6.1.2",
     "simple-git-hooks": "^2.13.1",
