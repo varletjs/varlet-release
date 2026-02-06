@@ -2,14 +2,13 @@ import { resolve } from 'node:path'
 import { styleText } from 'node:util'
 import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
 import fse from 'fs-extra'
-import { glob } from 'glob'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
 import { changelog } from './changelog.js'
 
 const cwd = process.cwd()
-const { writeFileSync, readJSONSync } = fse
+const { writeFileSync, readJSONSync, existsSync, readdirSync } = fse
 
 const releaseTypes = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
 
@@ -96,18 +95,32 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   ret.stdout && logger.log(ret.stdout)
 }
 
+export function getAllPackageJsons(): string[] {
+  const result = [resolve(cwd, 'package.json')]
+
+  const packagesDir = resolve(cwd, 'packages')
+  if (existsSync(packagesDir)) {
+    for (const name of readdirSync(packagesDir)) {
+      const pkgPath = resolve(packagesDir, name, 'package.json')
+      if (existsSync(pkgPath)) {
+        result.push(pkgPath)
+      }
+    }
+  }
+
+  return result
+}
 function getPackageJsons() {
-  const packageJsons = ['package.json', ...glob.sync('packages/*/package.json')]
+  const packageJsons = getAllPackageJsons()
 
   return packageJsons.map((path) => {
-    const filePath = resolve(cwd, path)
     return {
-      config: readJSONSync(filePath) as {
+      config: readJSONSync(path) as {
         name: string
         version: string
         private: boolean
       },
-      filePath,
+      filePath: path,
     }
   })
 }
