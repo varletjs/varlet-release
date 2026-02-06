@@ -5,7 +5,7 @@ import fse from 'fs-extra'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
-import { changelog } from './changelog.js'
+import { changelog } from './changelog'
 
 const cwd = process.cwd()
 const { writeFileSync, readJSONSync, existsSync, readdirSync } = fse
