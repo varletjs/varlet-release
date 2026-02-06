@@ -69,7 +69,7 @@ vi.mock('../src/changelog.js', () => ({
   changelog: changelogMock,
 }))
 
-const mockCwd = 'C:\\repo'
+const mockCwd = process.platform === 'win32' ? 'C:\\repo' : '/repo'
 const rootPackagePath = resolve(mockCwd, 'package.json')
 const packagesDir = resolve(mockCwd, 'packages')
 
