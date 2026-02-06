@@ -7,16 +7,6 @@ const indexMock = vi.hoisted(() => ({
   commitLint: vi.fn(),
 }))
 
-const fsMock = vi.hoisted(() => ({
-  readJSONSync: vi.fn(() => ({ version: '0.0.0' })),
-}))
-
-vi.mock('fs-extra', () => ({
-  default: {
-    readJSONSync: fsMock.readJSONSync,
-  },
-}))
-
 vi.mock('../src/index.js', () => indexMock)
 
 async function runCli(args: string[]) {
@@ -36,7 +26,6 @@ describe('cli', () => {
     indexMock.publish.mockClear()
     indexMock.changelog.mockClear()
     indexMock.commitLint.mockClear()
-    fsMock.readJSONSync.mockClear()
   })
 
   afterEach(() => {
