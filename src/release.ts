@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { styleText } from 'node:util'
 import { confirm, select } from '@inquirer/prompts'
 import fse from 'fs-extra'
 import { glob } from 'glob'
@@ -147,7 +148,7 @@ async function confirmRefs(remote = 'origin') {
   const { stdout: branch } = await exec('git', ['branch', '--show-current'])
 
   const ret = await confirm({
-    message: `Current refs ${repo}:refs/for/${branch}`,
+    message: `Current refs ${repo}:refs/for/${styleText('blue', branch)}`,
   })
 
   return ret
