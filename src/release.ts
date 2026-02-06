@@ -1,9 +1,8 @@
 import { resolve } from 'node:path'
 import { styleText } from 'node:util'
-import { confirm, select } from '@inquirer/prompts'
+import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
 import fse from 'fs-extra'
 import { glob } from 'glob'
-import { createSpinner } from 'nanospinner'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
@@ -22,7 +21,8 @@ async function isWorktreeEmpty() {
 }
 
 export async function isSameVersion(version?: string): Promise<boolean | undefined> {
-  const s = createSpinner('Check remote version...').start()
+  const s = spinner()
+  s.start('Check remote version...')
 
   const packageJsones = getPackageJsons()
   const packageJson = packageJsones.find((packageJson) => !packageJson.config.private) || packageJsones[0]
@@ -33,12 +33,11 @@ export async function isSameVersion(version?: string): Promise<boolean | undefin
         throwOnError: true,
       })
 
-      s.warn({
-        text: `The npm package has a same remote version ${version ?? config.version}.`,
-      })
+      s.cancel()
+      logger.warn(`The npm package has a same remote version ${version ?? config.version}.`)
       return true
     } catch {
-      s.success()
+      s.stop()
       return false
     }
   }
@@ -51,7 +50,8 @@ export interface PublishCommandOptions {
 }
 
 export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void> {
-  const s = createSpinner('Publishing all packages').start()
+  const s = spinner()
+  s.start('Publishing all packages')
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
   if (checkRemoteVersion && (await isSameVersion())) {
@@ -66,12 +66,13 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
   }
 
   const ret = await exec('pnpm', args, { throwOnError: true })
-  s.success({ text: 'Publish all packages successfully' })
+  s.stop('Publish all packages successfully')
   ret.stdout && logger.log(ret.stdout)
 }
 
 async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
-  const s = createSpinner('Pushing to remote git repository').start()
+  const s = spinner()
+  s.start('Pushing to remote git repository')
   await exec('git', ['add', '.'], {
     throwOnError: true,
   })
@@ -91,7 +92,7 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   const ret = await exec('git', ['push'], {
     throwOnError: true,
   })
-  s.success({ text: 'Push remote repository successfully' })
+  s.stop('Push remote repository successfully')
   ret.stdout && logger.log(ret.stdout)
 }
 
@@ -126,17 +127,27 @@ async function confirmRegistry() {
     message: `Current registry is: ${registry}`,
   })
 
+  if (isCancel(ret)) {
+    cancel('Operation cancelled.')
+    process.exit(0)
+  }
+
   return ret
 }
 
 async function confirmVersion(currentVersion: string, expectVersion: string) {
   const ret = await select({
     message: 'Version confirm',
-    choices: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map((value) => ({
-      name: value,
+    options: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map((value) => ({
+      label: value,
       value,
     })),
   })
+
+  if (isCancel(ret)) {
+    cancel('Operation cancelled.')
+    process.exit(0)
+  }
 
   return ret
 }
@@ -151,14 +162,24 @@ async function confirmRefs(remote = 'origin') {
     message: `Current refs ${repo}:refs/for/${styleText('blue', branch)}`,
   })
 
+  if (isCancel(ret)) {
+    cancel('Operation cancelled.')
+    process.exit(0)
+  }
+
   return ret
 }
 
 async function getReleaseType() {
   const releaseType = await select({
     message: 'Please select release type',
-    choices: releaseTypes.map((type) => ({ name: type, value: type })),
+    options: releaseTypes.map((type) => ({ label: type, value: type })),
   })
+
+  if (isCancel(releaseType)) {
+    cancel('Operation cancelled.')
+    process.exit(0)
+  }
 
   return releaseType as ReleaseType
 }

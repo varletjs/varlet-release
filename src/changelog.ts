@@ -1,7 +1,7 @@
 import { resolve as resolvePath } from 'node:path'
+import { spinner } from '@clack/prompts'
 import conventionalChangelog from 'conventional-changelog'
 import fse from 'fs-extra'
-import { createSpinner } from 'nanospinner'
 
 const { createWriteStream } = fse
 
@@ -99,7 +99,8 @@ export function changelog({
     },
   },
 }: ChangelogCommandOptions = {}): Promise<void> {
-  const s = createSpinner('Generating changelog').start()
+  const s = spinner()
+  s.start('Generating changelog')
 
   return new Promise((resolve) => {
     conventionalChangelog(
@@ -114,7 +115,7 @@ export function changelog({
     )
       .pipe(createWriteStream(resolvePath(process.cwd(), file)))
       .on('close', () => {
-        s.success({ text: 'Changelog generated success!' })
+        s.stop('Changelog generated successfully!')
         resolve()
       })
   })

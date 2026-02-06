@@ -51,12 +51,11 @@
     ]
   },
   "dependencies": {
-    "@inquirer/prompts": "^8.2.0",
+    "@clack/prompts": "^1.0.0",
     "commander": "^11.1.0",
     "conventional-changelog": "^5.1.0",
     "fs-extra": "^11.3.3",
     "glob": "^10.3.10",
-    "nanospinner": "^1.2.2",
     "rslog": "^2.0.0",
     "semver": "^7.5.4",
     "tinyexec": "^1.0.2"
