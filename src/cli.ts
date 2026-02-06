@@ -1,10 +1,9 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import fse from 'fs-extra'
-import { changelog, commitLint, publish, release } from '../dist/index.js'
+import { changelog, commitLint, publish, release } from './index.js'
 
 const program = new Command()
-
 const packageJson = fse.readJSONSync(new URL('../package.json', import.meta.url))
 
 program.version(packageJson.version)
