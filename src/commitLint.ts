@@ -4,7 +4,7 @@ import semver from 'semver'
 
 const { readFileSync } = fse
 
-export const COMMIT_MESSAGE_RE =
+export const COMMIT_MESSAGE_RE: RegExp =
   /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor|merge|wip)(\(.+\))?!?: (.|\n)+/
 
 const ERROR_MESSAGE = 'Commit message invalid.'
@@ -41,11 +41,11 @@ Allowed types:
 Commit message reference: https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y
 参考阮一峰Commit message编写指南: https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html`
 
-export function isVersionCommitMessage(message: string) {
-  return message.startsWith('v') && semver.valid(message.slice(1))
+export function isVersionCommitMessage(message: string): boolean {
+  return Boolean(message.startsWith('v') && semver.valid(message.slice(1)))
 }
 
-export function getCommitMessage(commitMessagePath: string) {
+export function getCommitMessage(commitMessagePath: string): string {
   return readFileSync(commitMessagePath, 'utf-8').trim()
 }
 
@@ -56,7 +56,7 @@ export interface CommitLintCommandOptions {
   warningMessage?: string
 }
 
-export function commitLint(options: CommitLintCommandOptions) {
+export function commitLint(options: CommitLintCommandOptions): void {
   const {
     commitMessagePath,
     commitMessageRe = COMMIT_MESSAGE_RE,

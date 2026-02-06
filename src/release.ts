@@ -1,4 +1,4 @@
-import { resolve } from 'path'
+import { resolve } from 'node:path'
 import { confirm, select } from '@inquirer/prompts'
 import fse from 'fs-extra'
 import { glob } from 'glob'
@@ -20,7 +20,7 @@ async function isWorktreeEmpty() {
   return !ret.stdout
 }
 
-export async function isSameVersion(version?: string) {
+export async function isSameVersion(version?: string): Promise<boolean | undefined> {
   const s = createSpinner('Check remote version...').start()
 
   const packageJsones = getPackageJsons()
@@ -49,7 +49,7 @@ export interface PublishCommandOptions {
   npmTag?: string
 }
 
-export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions) {
+export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void> {
   const s = createSpinner('Publishing all packages').start()
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
@@ -110,7 +110,7 @@ function getPackageJsons() {
   })
 }
 
-export function updateVersion(version: string) {
+export function updateVersion(version: string): void {
   const packageJsons = getPackageJsons()
 
   packageJsons.forEach(({ config, filePath }) => {
@@ -187,7 +187,7 @@ export interface ReleaseCommandOptions {
   task?(newVersion: string, oldVersion: string): Promise<void>
 }
 
-export async function release(options: ReleaseCommandOptions) {
+export async function release(options: ReleaseCommandOptions): Promise<void> {
   try {
     const currentVersion = readJSONSync(resolve(cwd, 'package.json')).version
 
@@ -253,7 +253,9 @@ export async function release(options: ReleaseCommandOptions) {
       }
     }
   } catch (error: any) {
-    logger.error(error.toString())
+    if (error?.name !== 'ExitPromptError') {
+      logger.error(error.toString())
+    }
     process.exit(1)
   }
 }

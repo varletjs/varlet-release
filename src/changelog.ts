@@ -1,4 +1,4 @@
-import { resolve as resolvePath } from 'path'
+import { resolve as resolvePath } from 'node:path'
 import conventionalChangelog from 'conventional-changelog'
 import fse from 'fs-extra'
 import { createSpinner } from 'nanospinner'
