@@ -37,6 +37,8 @@
     "format": "eslint . --fix && prettier --write .",
     "lint": "eslint . && prettier --check .",
     "release": "pnpm build && node bin/index.js release -c",
+    "test": "vitest",
+    "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit"
   },
   "simple-git-hooks": {
@@ -75,7 +77,9 @@
     "rimraf": "^6.1.2",
     "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.20.3",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.18",
+    "@vitest/coverage-v8": "^4.0.18"
   },
   "packageManager": "pnpm@10.28.2",
   "engines": {
