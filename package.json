@@ -48,10 +48,11 @@
   },
   "lint-staged": {
     "*.{md}": "prettier --write",
-    "*.{ts}": [
+    "*.{ts,js}": [
       "prettier --write",
       "eslint --fix"
-    ]
+    ],
+    "package.json": "prettier --write"
   },
   "dependencies": {
     "@clack/prompts": "^1.0.0",
