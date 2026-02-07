@@ -28,7 +28,9 @@ jobs:
         run: pnpm type-check
 
       - name: Build
-        run: pnpm build
+        run: |
+          pnpm build
+          node dist/cli.js -V
 
       - name: Test
         run: pnpm test

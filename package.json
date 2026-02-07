@@ -36,7 +36,7 @@
     "dev": "tsdown --watch",
     "format": "eslint . --fix && prettier --write .",
     "lint": "eslint . && prettier --check .",
-    "release": "pnpm build && node dist/cli.js release -c",
+    "release": "pnpm build && node scripts/release.js",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
     "type-check": "tsc --noEmit"
