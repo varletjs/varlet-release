@@ -13,6 +13,8 @@
 
 `Varlet Release` is a tool used for publishing all packages, generating change logs, and checking `commit messages`, relying on `pnpm`.
 
+> `Varlet Release` requires `Node.js` ^20.19.0 || >=22.12.0 and `esm` only.
+
 ## Installation
 
 ```shell

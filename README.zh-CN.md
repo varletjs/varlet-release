@@ -13,6 +13,8 @@
 
 `Varlet Release` 是一个用于发布所有包、生成变更日志和检测 `commit message` 的工具，依赖于 `pnpm`。
 
+`Varlet Release` 需要 `Node.js` ^20.19.0 || >=22.12.0，并且仅支持 `esm`。
+
 ## 安装
 
 ```shell
