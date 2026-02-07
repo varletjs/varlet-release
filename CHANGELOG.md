@@ -1,3 +1,29 @@
+# [1.0.0](https://github.com/varletjs/release/compare/v0.4.4...v1.0.0) (2026-02-07)
+
+
+### Bug Fixes
+
+* **release.ts:** handle publish errors and improve error logging ([8369475](https://github.com/varletjs/release/commit/83694758910d2ca06fd9cd8f52bb152647aa3e5b))
+* **release.ts:** log all errors in release function ([6ef4365](https://github.com/varletjs/release/commit/6ef436577d3075625baf13019467e9a94f6deb47))
+* **tests:** update mockCwd to handle cross-platform compatibility ([b3eae79](https://github.com/varletjs/release/commit/b3eae79d92659f0b09f0ea63d7970075d409d38a))
+
+
+### Code Refactoring
+
+* **cli:** bin/index.js -> src/cli.ts ([2b8b9a8](https://github.com/varletjs/release/commit/2b8b9a85afb21edc0ff1bf4dbbef4874e51f8564))
+* **cli:** Change package version to import-based approach ([9aadda9](https://github.com/varletjs/release/commit/9aadda9cf749653bfa2250a0fe78fc8b9de436db))
+* remove unused `glob` dependency ([7a508c8](https://github.com/varletjs/release/commit/7a508c8e7c9abf33f6d72165cddde5fb3630b2b0))
+
+
+### Features
+
+* Highlight current branch name in confirmation message ([6fa9ade](https://github.com/varletjs/release/commit/6fa9adec770c8de53345a18cf483ac7e4d782bfb))
+* **release:** use release script ([487758c](https://github.com/varletjs/release/commit/487758cb834e09ca8fc9e5df7d393bb7f365a340))
+* replace `@inquirer/prompts `nanospinner`  with @clack/prompts ([065c180](https://github.com/varletjs/release/commit/065c180ba1bfb4e68de60445de1d80dd3290d3f0))
+* **tests:** add unit tests for commitLint and release modules ([5ec5c77](https://github.com/varletjs/release/commit/5ec5c7724d6acf79ee721df6e5e7520b1f542a4b))
+
+
+
 ## [0.4.4](https://github.com/varletjs/release/compare/v0.4.2...v0.4.4) (2025-11-16)
 
 
