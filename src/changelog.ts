@@ -35,6 +35,15 @@ export function changelog({
         discard = false
       })
 
+      const hasBreakingNotes = commit.notes.length > 0
+      if (typeof commit.type === 'string' && commit.type.endsWith('!')) {
+        commit.type = commit.type.slice(0, -1)
+        if (!hasBreakingNotes) {
+          commit.notes.push({ title: 'BREAKING CHANGES', text: '' })
+        }
+        discard = false
+      }
+
       if (commit.type === 'feat') {
         commit.type = 'Features'
       } else if (commit.type === 'fix') {
