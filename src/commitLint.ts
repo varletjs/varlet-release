@@ -4,8 +4,10 @@ import semver from 'semver'
 
 const { readFileSync } = fse
 
-export const COMMIT_MESSAGE_RE: RegExp =
-  /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor|merge|wip)(\(.+\))?!?: (.|\n)+/
+export const COMMIT_HEADER_RE: RegExp =
+  /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor|merge|wip)(?:\(([^)]+)\))?(!)?:\s(.+)$/
+
+export const COMMIT_MESSAGE_RE: RegExp = new RegExp(COMMIT_HEADER_RE.source.replace(/\$$/, '') + '(?:\\n[\\s\\S]+)?$')
 
 const ERROR_MESSAGE = 'Commit message invalid.'
 const WARNING_MESSAGE = `\

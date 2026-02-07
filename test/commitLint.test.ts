@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { commitLint, getCommitMessage, isVersionCommitMessage } from '../src/commitLint'
+import {
+  COMMIT_HEADER_RE,
+  COMMIT_MESSAGE_RE,
+  commitLint,
+  getCommitMessage,
+  isVersionCommitMessage,
+} from '../src/commitLint'
 
 const fsMock = vi.hoisted(() => {
   let content = ''
@@ -82,5 +88,22 @@ describe('commitLint', () => {
 
     expect(() => commitLint({ commitMessagePath: 'COMMIT_EDITMSG' })).not.toThrow()
     expect(exitSpy).not.toHaveBeenCalled()
+  })
+
+  it('parses header parts with breaking change marker', () => {
+    const match = COMMIT_HEADER_RE.exec('feat(core)!: drop legacy api')
+    expect(match?.[1]).toBe('feat')
+    expect(match?.[2]).toBe('core')
+    expect(match?.[3]).toBe('!')
+    expect(match?.[4]).toBe('drop legacy api')
+  })
+
+  it('accepts multiline commit messages', () => {
+    const message = 'feat: add feature\n\nMore details\n- item'
+    expect(COMMIT_MESSAGE_RE.test(message)).toBe(true)
+  })
+
+  it('rejects commit messages without subject', () => {
+    expect(COMMIT_MESSAGE_RE.test('feat:')).toBe(false)
   })
 })
