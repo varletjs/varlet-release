@@ -1,3 +1,12 @@
+## [1.0.1](https://github.com/varletjs/release/compare/v1.0.0...v1.0.1) (2026-02-07)
+
+
+### Features
+
+* **changelog:** add support for breaking changes in changelog generation ([8945cf9](https://github.com/varletjs/release/commit/8945cf9e2766c3faaee2788f4a1d36d74fae3f56))
+
+
+
 # [1.0.0](https://github.com/varletjs/release/compare/v0.4.4...v1.0.0) (2026-02-07)
 
 
