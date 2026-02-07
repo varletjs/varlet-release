@@ -310,4 +310,40 @@ describe('release command flow', () => {
 
     cwdSpy.mockRestore()
   })
+
+  it('exits when publish fails with npm permission error', async () => {
+    fsMock.state.files.set(rootPackagePath, { name: 'root', version: '1.0.0', private: false })
+    promptsMock.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValueOnce('confirm')
+
+    execMock.mockImplementation((cmd: string, args: string[]) => {
+      if (cmd === 'git' && args[0] === 'status') {
+        return Promise.resolve({ stdout: '' })
+      }
+      if (cmd === 'git' && args[0] === 'remote') {
+        return Promise.resolve({ stdout: 'origin\tgit@github.com:varletjs/release.git (push)\n' })
+      }
+      if (cmd === 'git' && args[0] === 'branch') {
+        return Promise.resolve({ stdout: 'main' })
+      }
+      if (cmd === 'npm' && args[0] === 'config') {
+        return Promise.resolve({ stdout: 'https://registry.npmjs.org/' })
+      }
+      if (cmd === 'pnpm' && args[0] === '-r' && args[1] === 'publish') {
+        return Promise.reject({ output: { stderr: 'E403 no npm permission' } })
+      }
+      return Promise.resolve({ stdout: '' })
+    })
+
+    const { mod, cwdSpy } = await loadReleaseModule()
+    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+      throw new Error(`process.exit:${code}`)
+    }) as never)
+
+    await expect(mod.release({})).rejects.toThrow('process.exit')
+
+    expect(loggerMock.error).toHaveBeenCalledWith('E403 no npm permission')
+    expect(exitSpy).toHaveBeenCalledWith(1)
+    cwdSpy.mockRestore()
+  })
 })

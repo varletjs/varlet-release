@@ -64,9 +64,14 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
     args.push('--tag', npmTag)
   }
 
-  const ret = await exec('pnpm', args, { throwOnError: true })
-  s.stop('Publish all packages successfully')
-  ret.stdout && logger.log(ret.stdout)
+  try {
+    const ret = await exec('pnpm', args, { throwOnError: true })
+    s.stop('Publish all packages successfully')
+    ret.stdout && logger.log(ret.stdout)
+  } catch (error: any) {
+    s.cancel('Publish all packages failed')
+    throw error?.output?.stderr ?? error
+  }
 }
 
 async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
@@ -288,7 +293,7 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
       }
     }
   } catch (error: any) {
-    logger.error(error.toString())
+    logger.error(error)
     process.exit(1)
   }
 }
