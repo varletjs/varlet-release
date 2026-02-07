@@ -288,9 +288,7 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
       }
     }
   } catch (error: any) {
-    if (error?.name !== 'ExitPromptError') {
-      logger.error(error.toString())
-    }
+    logger.error(error.toString())
     process.exit(1)
   }
 }
