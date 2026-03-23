@@ -1,3 +1,11 @@
+# [1.1.0](https://github.com/varletjs/release/compare/v1.0.2...v1.1.0) (2026-03-23)
+
+
+### Code Refactoring
+
+* replace fs-extra with native fs methods ([5d3816e](https://github.com/varletjs/release/commit/5d3816e31e4e8aa0057862688a8b31b2835dc098))
+* **test/release:** closer to the real environment ([16e481e](https://github.com/varletjs/release/commit/16e481eecbf452037ce4d740f21756a488a0c577))
+
 ## [1.0.2](https://github.com/varletjs/release/compare/v1.0.1...v1.0.2) (2026-02-07)
 
 
