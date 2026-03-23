@@ -13,6 +13,11 @@
 
 `Varlet Release` is a tool used for publishing all packages, generating change logs, and checking `commit messages`, relying on `pnpm`.
 
+- 📦 **Out of the box**: Zero-configuration release experience
+- 🤖 **Interactive CLI**: Friendly interactive terminal prompts
+- 🛠 **Standardization**: Validates Git Commit messages and generates standard changelogs
+- 🔗 **Extensibility**: Supports both CLI commands and Node.js API for deep customization
+
 > `Varlet Release` requires `Node.js` ^20.19.0 || >=22.12.0 and `esm` only.
 
 ## Installation
@@ -23,10 +28,21 @@ pnpm add @varlet/release -D
 
 ## Usage
 
+### Core Workflow
+
+When executing `vr release`, the following sequence of lifecycles occurs automatically:
+
+1. Select/Confirm the **version** to publish interactively
+2. Execute the user-defined `task` function (optional, e.g., to rebuild projects based on the new version)
+3. Update the `package.json` **version** programmatically
+4. Generate the **Changelog**
+5. **Git Commit** & **Git Tag**
+6. **Publish** to npm
+
 ### Using Command
 
 ```shell
-# Release all packages and generate changelogs
+# Release all packages and run the full workflow
 npx vr release
 
 # Specify remote name
@@ -49,26 +65,38 @@ npx vr lint-commit -p .git/COMMIT_EDITMSG
 npx vr publish
 ```
 
+### Git Hooks Integration (Best Practice)
+
+It is highly recommended to use `commit-lint` with `simple-git-hooks` or `husky` in `package.json` to automatically check developers' commit messages before committing:
+
+```json
+{
+  "simple-git-hooks": {
+    "commit-msg": "npx vr lint-commit -p $1"
+  }
+}
+```
+
 ### Configuration
 
 #### release
 
-| Params                    | Instructions                                                                                                              |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
-| -r --remote \<remote\>    | Specify remote name                                                                                                       |
-| -s --skip-npm-publish     | Skip npm publish                                                                                                          |
-| -c --check-remote-version | Check if the remote version of the npm package is the same as the one you want to publish locally, if so, stop execution. |
-| -sc --skip-changelog      | Skip generate changelog                                                                                                   |
-| -sgt --skip-git-tag       | Skip git tag                                                                                                              |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                   |
+| Params                    | Instructions                                                                                                              | Default  |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
+| -r --remote \<remote\>    | Specify remote name                                                                                                       | `origin` |
+| -s --skip-npm-publish     | Skip npm publish                                                                                                          | `false`  |
+| -c --check-remote-version | Check if the remote version of the npm package is the same as the one you want to publish locally, if so, stop execution. | `false`  |
+| -sc --skip-changelog      | Skip generate changelog                                                                                                   | `false`  |
+| -sgt --skip-git-tag       | Skip git tag                                                                                                              | `false`  |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                   | `-`      |
 
 #### changelog
 
-| Params                              | Instructions               |
-| ----------------------------------- | -------------------------- |
-| -f --file \<filename\>              | Specify changelog filename |
-| -rc --releaseCount \<releaseCount\> | Release count              |
-| -p --preset \<preset\>              | Specify changelog preset   |
+| Params                              | Instructions               | Default        |
+| ----------------------------------- | -------------------------- | -------------- |
+| -f --file \<filename\>              | Specify changelog filename | `CHANGELOG.md` |
+| -rc --releaseCount \<releaseCount\> | Release count              | `0`            |
+| -p --preset \<preset\>              | Specify changelog preset   | `angular`      |
 
 #### lint-commit
 
@@ -81,81 +109,35 @@ npx vr publish
 
 #### publish
 
-| Params                    | Instructions                                                                                                                                     |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                                          |
+| Params                    | Instructions                                                                                                                                     | Default |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
+| -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release | `false` |
+| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                                          | `-`     |
 
-### Custom Handle
+### Node API Custom Handle
+
+You can write your own release scripts with Internal Node.js API instead of CLI.
 
 #### Example
 
 ```js
 import { changelog, release } from '@varlet/release'
 
-// Do what you want to do...
+// Run the core release workflow directly
 release()
 ```
 
-You can pass in a task that will be called before the publish after the package version is changed.
+You can pass in a custom `task` function that will be called after the package version is updated but before the remaining publish steps.
 
 ```js
 import { changelog, release } from '@varlet/release'
 
-async function task() {
+async function task(newVersion, oldVersion) {
   await doSomething1()
   await doSomething2()
 }
 
 release({ task })
-```
-
-#### Types
-
-```ts
-interface PublishCommandOptions {
-  preRelease?: boolean
-  checkRemoteVersion?: boolean
-  npmTag?: string
-}
-function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void>
-function updateVersion(version: string): void
-interface ReleaseCommandOptions {
-  remote?: string
-  skipNpmPublish?: boolean
-  skipChangelog?: boolean
-  skipGitTag?: boolean
-  npmTag?: string
-  task?(newVersion: string, oldVersion: string): Promise<void>
-}
-function release(options: ReleaseCommandOptions): Promise<void>
-
-interface ChangelogCommandOptions {
-  file?: string
-  releaseCount?: number
-  preset?:
-    | 'angular'
-    | 'atom'
-    | 'codemirror'
-    | 'conventionalcommits'
-    | 'ember'
-    | 'eslint'
-    | 'express'
-    | 'jquery'
-    | 'jshint'
-}
-function changelog({ releaseCount, file, preset }?: ChangelogCommandOptions): Promise<void>
-
-const COMMIT_MESSAGE_RE: RegExp
-function isVersionCommitMessage(message: string): string | false | null
-function getCommitMessage(commitMessagePath: string): string
-interface CommitLintCommandOptions {
-  commitMessagePath: string
-  commitMessageRe?: string | RegExp
-  errorMessage?: string
-  warningMessage?: string
-}
-function commitLint(options: CommitLintCommandOptions): void
 ```
 
 ## License
