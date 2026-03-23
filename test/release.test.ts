@@ -1,25 +1,44 @@
-import { resolve } from 'node:path'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { tmpdir } from 'node:os'
+import { join } from 'node:path'
+import fse from 'fs-extra'
+// Need to import x *after* the mock has been configured!
+import { x as exec } from 'tinyexec'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+// Static import — works because release.ts now calls process.cwd() lazily
+// instead of capturing it at module load time.
+import { getAllPackageJsons, publish, release, updateVersion } from '../src/release'
 
-const fsMock = vi.hoisted(() => {
-  const state = {
-    files: new Map<string, any>(),
-    exists: new Set<string>(),
-    dirs: new Map<string, string[]>(),
-    writes: [] as Array<{ path: string; data: string }>,
+// Global execution override for specific failure testing
+let mockExecOverride: null | ((cmd: string, args: string[]) => Promise<any> | undefined) = null
+
+// Symbol used to simulate user cancellation in @clack/prompts.
+// When a prompt returns this symbol, isCancel() returns true.
+const CANCEL_SYMBOL = Symbol.for('clack:cancel')
+
+vi.mock('tinyexec', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('tinyexec')>()
+  return {
+    ...actual,
+    x: (cmd: string, args: string[], opts?: any) => {
+      if (mockExecOverride) {
+        const res = mockExecOverride(cmd, args)
+        if (res !== undefined) {
+          return res
+        }
+      }
+      const injectedOpts = {
+        ...opts,
+        nodeOptions: {
+          cwd: process.cwd(),
+          ...(opts?.nodeOptions || {}),
+        },
+      }
+      return actual.x(cmd, args, injectedOpts)
+    },
   }
-
-  const readJSONSync = vi.fn((path: string) => state.files.get(path))
-  const writeFileSync = vi.fn((path: string, data: string) => {
-    state.writes.push({ path, data })
-  })
-  const existsSync = vi.fn((path: string) => state.exists.has(path))
-  const readdirSync = vi.fn((path: string) => state.dirs.get(path) ?? [])
-
-  return { state, readJSONSync, writeFileSync, existsSync, readdirSync }
 })
 
-const execMock = vi.hoisted(() => vi.fn())
+const { writeFileSync, ensureDirSync, removeSync, copySync } = fse
 
 const loggerMock = vi.hoisted(() => ({
   error: vi.fn(),
@@ -38,26 +57,13 @@ const promptsMock = vi.hoisted(() => {
   return {
     cancel: vi.fn(),
     confirm: vi.fn(),
-    isCancel: vi.fn().mockReturnValue(false),
+    // Value-based: returns true only when the prompt result is our cancel symbol.
+    // This avoids fragile call-count-based mocking.
+    isCancel: vi.fn((val: unknown) => val === Symbol.for('clack:cancel')),
     select: vi.fn(),
     spinner,
   }
 })
-
-const changelogMock = vi.hoisted(() => vi.fn())
-
-vi.mock('fs-extra', () => ({
-  default: {
-    readJSONSync: fsMock.readJSONSync,
-    writeFileSync: fsMock.writeFileSync,
-    existsSync: fsMock.existsSync,
-    readdirSync: fsMock.readdirSync,
-  },
-}))
-
-vi.mock('tinyexec', () => ({
-  x: execMock,
-}))
 
 vi.mock('rslog', () => ({
   logger: loggerMock,
@@ -65,285 +71,558 @@ vi.mock('rslog', () => ({
 
 vi.mock('@clack/prompts', () => promptsMock)
 
-vi.mock('../src/changelog.js', () => ({
-  changelog: changelogMock,
-}))
-
-const mockCwd = process.platform === 'win32' ? 'C:\\repo' : '/repo'
-const rootPackagePath = resolve(mockCwd, 'package.json')
-const packagesDir = resolve(mockCwd, 'packages')
-
-async function loadReleaseModule() {
-  vi.resetModules()
-  const cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(mockCwd)
-  const mod = await import('../src/release')
-  return { mod, cwdSpy }
-}
-
-beforeEach(() => {
-  fsMock.state.files.clear()
-  fsMock.state.exists.clear()
-  fsMock.state.dirs.clear()
-  fsMock.state.writes.length = 0
-  fsMock.readJSONSync.mockClear()
-  fsMock.writeFileSync.mockClear()
-  fsMock.existsSync.mockClear()
-  fsMock.readdirSync.mockClear()
-  execMock.mockReset()
+function resetTestDoubles() {
+  mockExecOverride = null
   loggerMock.error.mockClear()
   loggerMock.warn.mockClear()
   loggerMock.log.mockClear()
   loggerMock.success.mockClear()
   promptsMock.confirm.mockReset()
   promptsMock.select.mockReset()
-  promptsMock.isCancel.mockReset()
-  promptsMock.isCancel.mockReturnValue(false)
-  promptsMock.cancel.mockClear()
-  promptsMock.spinner.mockClear()
-  changelogMock.mockClear()
-})
+  // Only clear call history; the value-based implementation is stateless and doesn't need resetting.
+  promptsMock.isCancel.mockClear().mockImplementation((val: unknown) => val === CANCEL_SYMBOL)
+}
 
-afterEach(() => {
-  vi.restoreAllMocks()
-})
+function createSandbox(prefix: string) {
+  return join(tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
+}
 
-describe('release helpers', () => {
-  it('collects only root package.json when packages dir is missing', async () => {
-    const { mod, cwdSpy } = await loadReleaseModule()
-    const result = mod.getAllPackageJsons()
-    expect(result).toEqual([rootPackagePath])
-    cwdSpy.mockRestore()
-  })
+async function setupGitRepo(testRepo: string, testRemote: string) {
+  ensureDirSync(testRepo)
+  ensureDirSync(testRemote)
 
-  it('collects workspace package.json files when packages dir exists', async () => {
-    const pkgAPath = resolve(mockCwd, 'packages', 'a', 'package.json')
-    const pkgBPath = resolve(mockCwd, 'packages', 'b', 'package.json')
+  await exec('git', ['init', '--bare'], { nodeOptions: { cwd: testRemote } })
+  await exec('git', ['init'], { nodeOptions: { cwd: testRepo } })
 
-    fsMock.state.exists.add(packagesDir)
-    fsMock.state.exists.add(pkgAPath)
-    fsMock.state.exists.add(pkgBPath)
-    fsMock.state.dirs.set(packagesDir, ['a', 'b'])
+  await exec('git', ['config', 'user.name', 'Tester'], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['config', 'user.email', 'test@example.com'], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['config', 'commit.gpgsign', 'false'], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['config', 'core.autocrlf', 'false'], { nodeOptions: { cwd: testRepo } })
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    const result = mod.getAllPackageJsons()
-    expect(result).toEqual([rootPackagePath, pkgAPath, pkgBPath])
-    cwdSpy.mockRestore()
-  })
+  writeFileSync(
+    join(testRepo, 'package.json'),
+    JSON.stringify({ name: 'varlet-e2e-dummy', version: '1.0.0', private: false }, null, 2),
+  )
 
-  it('updates versions for all package.json files', async () => {
-    const pkgAPath = resolve(mockCwd, 'packages', 'a', 'package.json')
-    const rootConfig = { name: 'root', version: '1.0.0', private: false }
-    const pkgAConfig = { name: 'pkg-a', version: '1.0.0', private: false }
+  await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['commit', '-m', 'chore: initial commit'], { nodeOptions: { cwd: testRepo } })
 
-    fsMock.state.exists.add(packagesDir)
-    fsMock.state.exists.add(pkgAPath)
-    fsMock.state.dirs.set(packagesDir, ['a'])
-    fsMock.state.files.set(rootPackagePath, rootConfig)
-    fsMock.state.files.set(pkgAPath, pkgAConfig)
+  await exec('git', ['remote', 'add', 'origin', testRemote], { nodeOptions: { cwd: testRepo } })
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    mod.updateVersion('1.0.1')
+  let branchName = (await exec('git', ['branch', '--show-current'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
+  if (!branchName) {
+    branchName = 'master'
+  }
 
-    expect(rootConfig.version).toBe('1.0.1')
-    expect(pkgAConfig.version).toBe('1.0.1')
-    expect(fsMock.writeFileSync).toHaveBeenCalledTimes(2)
-    cwdSpy.mockRestore()
-  })
+  await exec('git', ['push', '-u', 'origin', branchName], { nodeOptions: { cwd: testRepo } })
+}
 
-  it('detects same remote version via npm view', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'pkg', version: '1.0.0', private: false })
-    execMock.mockResolvedValueOnce({ stdout: '1.0.0' })
+function cleanupSandbox(testSandbox?: string) {
+  try {
+    // On windows sometimes git execution keeps lock on objects
+    testSandbox && removeSync(testSandbox)
+  } catch {
+    /* empty */
+  }
+}
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    const result = await mod.isSameVersion()
+function mockProcessExit() {
+  return vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
+    throw new Error(`process.exit:${code}`)
+  }) as never)
+}
 
-    expect(result).toBe(true)
-    expect(loggerMock.warn).toHaveBeenCalled()
-    cwdSpy.mockRestore()
-  })
+async function getGitTags(testRepo: string) {
+  return (await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
+}
 
-  it('returns false when npm view fails', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'pkg', version: '1.0.0', private: false })
-    execMock.mockRejectedValueOnce(new Error('not found'))
+async function getCommitCount(testRepo: string) {
+  return (await exec('git', ['rev-list', '--count', 'HEAD'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
+}
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    const result = await mod.isSameVersion()
-
-    expect(result).toBe(false)
-    cwdSpy.mockRestore()
-  })
-
-  it('publishes prerelease with alpha tag', async () => {
-    execMock.mockResolvedValueOnce({ stdout: 'ok' })
-    const { mod, cwdSpy } = await loadReleaseModule()
-
-    await mod.publish({ preRelease: true })
-
-    const publishCall = execMock.mock.calls.find((call) => call[0] === 'pnpm')
-    expect(publishCall?.[1]).toContain('--tag')
-    expect(publishCall?.[1]).toContain('alpha')
-    cwdSpy.mockRestore()
-  })
-
-  it('skips publish when remote version matches', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'pkg', version: '1.0.0', private: false })
-    execMock.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === 'npm' && args[0] === 'view') {
-        return Promise.resolve({ stdout: '1.0.0' })
+/**
+ * Creates a mock that intercepts ALL exec calls with sensible defaults.
+ * Used in lightweight tests to avoid real git/npm operations.
+ * @param overrides Test-specific overrides that take priority over defaults
+ */
+function createFullExecMock(overrides?: (cmd: string, args: string[]) => Promise<any> | undefined) {
+  return (cmd: string, args: string[]): Promise<any> | undefined => {
+    if (overrides) {
+      const r = overrides(cmd, args)
+      if (r !== undefined) {
+        return r
       }
-      return Promise.resolve({ stdout: '' })
-    })
+    }
+    const ok = (stdout = '') => Promise.resolve({ stdout, stderr: '' } as any)
+    if (cmd === 'git') {
+      if (args[0] === 'remote') {
+        return ok('origin\thttps://github.com/test/repo.git (push)')
+      }
+      if (args[0] === 'branch') {
+        return ok('main')
+      }
+      return ok()
+    }
+    if (cmd === 'npm') {
+      if (args[0] === 'config') {
+        return ok('https://registry.npmjs.org/')
+      }
+      if (args[0] === 'view') {
+        return Promise.reject(new Error('404 Not Found'))
+      }
+    }
+    return ok()
+  }
+}
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    await mod.publish({ checkRemoteVersion: true })
+// ================================
+// Real E2E tests (uses real git repo from template)
+// ================================
+describe('release E2E (real git)', () => {
+  let templateSandbox: string
+  let testSandbox: string
+  let testRepo: string
 
-    expect(loggerMock.error).toHaveBeenCalledWith('publishing automatically skipped.')
-    expect(execMock.mock.calls.some((call) => call[0] === 'pnpm')).toBe(false)
-    cwdSpy.mockRestore()
+  async function cloneSandboxFromTemplate(targetSandbox: string) {
+    const targetRepo = join(targetSandbox, 'repo')
+    const targetRemote = join(targetSandbox, 'remote.git')
+    copySync(join(templateSandbox, 'repo'), targetRepo)
+    copySync(join(templateSandbox, 'remote.git'), targetRemote)
+    await exec('git', ['remote', 'set-url', 'origin', targetRemote], { nodeOptions: { cwd: targetRepo } })
+    return targetRepo
+  }
+
+  beforeAll(async () => {
+    templateSandbox = createSandbox('varlet-release-template')
+    await setupGitRepo(join(templateSandbox, 'repo'), join(templateSandbox, 'remote.git'))
   })
-})
 
-describe('release command flow', () => {
-  it('stops when package version is missing', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'root' })
-    const { mod, cwdSpy } = await loadReleaseModule()
+  afterAll(() => {
+    cleanupSandbox(templateSandbox)
+  })
 
-    await mod.release({})
+  beforeEach(async () => {
+    resetTestDoubles()
+    testSandbox = createSandbox('varlet-release-e2e')
+    testRepo = await cloneSandboxFromTemplate(testSandbox)
+    vi.spyOn(process, 'cwd').mockReturnValue(testRepo)
+  })
 
-    expect(loggerMock.error).toHaveBeenCalledWith('Your package is missing the version field')
-    expect(execMock).not.toHaveBeenCalled()
-    cwdSpy.mockRestore()
+  afterEach(() => {
+    vi.restoreAllMocks()
+    cleanupSandbox(testSandbox)
   })
 
   it('stops when git worktree is not empty', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'root', version: '1.0.0' })
-    execMock.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === 'git' && args[0] === 'status') {
-        return Promise.resolve({ stdout: ' M file' })
-      }
-      return Promise.resolve({ stdout: '' })
-    })
+    writeFileSync(join(testRepo, 'dirty.js'), 'dirty')
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    await mod.release({})
+    await release({})
 
     expect(loggerMock.error).toHaveBeenCalledWith('Git worktree is not empty, please commit changed')
-    cwdSpy.mockRestore()
+  })
+
+  it('runs complete positive release flow properly', async () => {
+    writeFileSync(join(testRepo, 'test1.txt'), 'hello')
+    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['commit', '-m', 'feat: initial feature'], { nodeOptions: { cwd: testRepo } })
+
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    const taskSpy = vi.fn()
+    await release({ skipNpmPublish: true, remote: 'origin', task: taskSpy })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    expect(taskSpy).toHaveBeenCalledWith('1.0.1', '1.0.0')
+
+    const pkg = fse.readJSONSync(join(testRepo, 'package.json'))
+    expect(pkg.version).toBe('1.0.1')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
+
+    const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
+    expect(tags.stdout).toContain('v1.0.1')
+
+    const statusObj = await exec('git', ['status'], { nodeOptions: { cwd: testRepo } })
+    expect(statusObj.stdout).toContain('working tree clean')
+
+    const remoteTags = await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })
+    expect(remoteTags.stdout).toContain('refs/tags/v1.0.1')
+  })
+
+  it('runs prerelease flow and restores root and workspace package.json files', async () => {
+    const workspacePkgPath = join(testRepo, 'packages', 'pkg-a', 'package.json')
+    ensureDirSync(join(testRepo, 'packages', 'pkg-a'))
+    writeFileSync(workspacePkgPath, JSON.stringify({ name: 'pkg-a', version: '1.0.0' }, null, 2))
+    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['commit', '-m', 'feat: workspace package'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['push'], { nodeOptions: { cwd: testRepo } })
+
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('prepatch').mockResolvedValue('confirm')
+
+    await release({ skipNpmPublish: true, remote: 'origin' })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
+    expect(tags.stdout.trim()).toBe('')
+
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(fse.readJSONSync(workspacePkgPath).version).toBe('1.0.0')
+    expect((await exec('git', ['status'], { nodeOptions: { cwd: testRepo } })).stdout).toContain('working tree clean')
+  })
+
+  it('runs release flow without creating a git tag when skipGitTag is enabled', async () => {
+    writeFileSync(join(testRepo, 'test-skip-git-tag.txt'), 'hello')
+    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['commit', '-m', 'feat: skip git tag coverage'], { nodeOptions: { cwd: testRepo } })
+
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    await release({ skipNpmPublish: true, skipGitTag: true, remote: 'origin' })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
+    expect(await getGitTags(testRepo)).toBe('')
+    expect(
+      (await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })).stdout.trim(),
+    ).toBe('')
+    expect(await getCommitCount(testRepo)).toBe('3')
+  })
+})
+
+// ================================
+// Lightweight release tests (mock git + minimal temp dir)
+// ================================
+describe('release process (lightweight)', () => {
+  let testSandbox: string
+  let testRepo: string
+
+  beforeEach(() => {
+    resetTestDoubles()
+    testSandbox = createSandbox('varlet-release-light')
+    testRepo = join(testSandbox, 'repo')
+    ensureDirSync(testRepo)
+    writeFileSync(
+      join(testRepo, 'package.json'),
+      JSON.stringify({ name: 'varlet-e2e-dummy', version: '1.0.0', private: false }, null, 2),
+    )
+    vi.spyOn(process, 'cwd').mockReturnValue(testRepo)
+    mockExecOverride = createFullExecMock()
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    cleanupSandbox(testSandbox)
+  })
+
+  it('stops when package version is missing', async () => {
+    writeFileSync(join(testRepo, 'package.json'), JSON.stringify({ name: 'root' }, null, 2))
+
+    await release({})
+
+    expect(loggerMock.error).toHaveBeenCalledWith('Your package is missing the version field')
+  })
+
+  it('stops when refs confirmation is rejected', async () => {
+    promptsMock.confirm.mockResolvedValueOnce(false)
+
+    const taskSpy = vi.fn()
+    await release({ skipNpmPublish: true, task: taskSpy })
+
+    expect(taskSpy).not.toHaveBeenCalled()
+    expect(promptsMock.select).not.toHaveBeenCalled()
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+  })
+
+  it('stops when registry confirmation is rejected', async () => {
+    promptsMock.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(false)
+
+    const taskSpy = vi.fn()
+    await release({ remote: 'origin', task: taskSpy })
+
+    expect(taskSpy).not.toHaveBeenCalled()
+    expect(promptsMock.select).not.toHaveBeenCalled()
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('stops when remote version matches', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'root', version: '1.0.0', private: false })
     promptsMock.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
-    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValueOnce('confirm')
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
 
-    execMock.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === 'git' && args[0] === 'status') {
-        return Promise.resolve({ stdout: '' })
-      }
-      if (cmd === 'git' && args[0] === 'remote') {
-        return Promise.resolve({ stdout: 'origin\tgit@github.com:varletjs/release.git (push)\n' })
-      }
-      if (cmd === 'git' && args[0] === 'branch') {
-        return Promise.resolve({ stdout: 'main' })
-      }
-      if (cmd === 'npm' && args[0] === 'config') {
-        return Promise.resolve({ stdout: 'https://registry.npmjs.org/' })
-      }
+    mockExecOverride = createFullExecMock((cmd, args) => {
       if (cmd === 'npm' && args[0] === 'view') {
-        return Promise.resolve({ stdout: '1.0.1' })
+        return Promise.resolve({ stdout: '1.0.1', stderr: '' } as any)
       }
-      return Promise.resolve({ stdout: '' })
+      return undefined
     })
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    await mod.release({ checkRemoteVersion: true })
+    const taskSpy = vi.fn()
+    await release({ checkRemoteVersion: true, skipNpmPublish: true, task: taskSpy })
 
     expect(loggerMock.error).toHaveBeenCalledWith('Please check remote version.')
-    cwdSpy.mockRestore()
+    expect(taskSpy).not.toHaveBeenCalled()
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
-  it('runs prerelease flow and restores package.json files', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'root', version: '1.0.0', private: false })
+  it('continues release when isSameVersion returns false (version not on remote)', async () => {
     promptsMock.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
-    promptsMock.select.mockResolvedValueOnce('prepatch').mockResolvedValueOnce('confirm')
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
 
-    execMock.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === 'git' && args[0] === 'status') {
-        return Promise.resolve({ stdout: '' })
-      }
-      if (cmd === 'git' && args[0] === 'remote') {
-        return Promise.resolve({ stdout: 'origin\tgit@github.com:varletjs/release.git (push)\n' })
-      }
-      if (cmd === 'git' && args[0] === 'branch') {
-        return Promise.resolve({ stdout: 'main' })
-      }
-      if (cmd === 'npm' && args[0] === 'config') {
-        return Promise.resolve({ stdout: 'https://registry.npmjs.org/' })
-      }
-      return Promise.resolve({ stdout: '' })
-    })
+    // Default createFullExecMock already rejects npm view with 404
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    // eslint-disable-next-line require-await
-    const task = vi.fn(async () => undefined)
+    const taskSpy = vi.fn()
+    await release({ checkRemoteVersion: true, skipNpmPublish: true, skipChangelog: true, task: taskSpy })
 
-    await mod.release({ task })
-
-    expect(task).toHaveBeenCalled()
-    expect(changelogMock).not.toHaveBeenCalled()
-
-    const publishCall = execMock.mock.calls.find((call) => call[0] === 'pnpm')
-    expect(publishCall?.[1]).toContain('--tag')
-    expect(publishCall?.[1]).toContain('alpha')
-
-    expect(
-      execMock.mock.calls.some(
-        (call) => call[0] === 'git' && call[1][0] === 'restore' && call[1][1] === '**/package.json',
-      ),
-    ).toBe(true)
-
-    expect(
-      execMock.mock.calls.some(
-        (call) => call[0] === 'git' && call[1][0] === 'restore' && call[1][1] === 'package.json',
-      ),
-    ).toBe(true)
-
-    cwdSpy.mockRestore()
+    expect(loggerMock.error).not.toHaveBeenCalledWith('Please check remote version.')
+    expect(taskSpy).toHaveBeenCalled()
   })
 
-  it('exits when publish fails with npm permission error', async () => {
-    fsMock.state.files.set(rootPackagePath, { name: 'root', version: '1.0.0', private: false })
+  it('exits safely when publish fails with npm permission error', async () => {
     promptsMock.confirm.mockResolvedValueOnce(true).mockResolvedValueOnce(true)
-    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValueOnce('confirm')
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
 
-    execMock.mockImplementation((cmd: string, args: string[]) => {
-      if (cmd === 'git' && args[0] === 'status') {
-        return Promise.resolve({ stdout: '' })
-      }
-      if (cmd === 'git' && args[0] === 'remote') {
-        return Promise.resolve({ stdout: 'origin\tgit@github.com:varletjs/release.git (push)\n' })
-      }
-      if (cmd === 'git' && args[0] === 'branch') {
-        return Promise.resolve({ stdout: 'main' })
-      }
-      if (cmd === 'npm' && args[0] === 'config') {
-        return Promise.resolve({ stdout: 'https://registry.npmjs.org/' })
-      }
-      if (cmd === 'pnpm' && args[0] === '-r' && args[1] === 'publish') {
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'pnpm' && args.includes('publish')) {
         return Promise.reject({ output: { stderr: 'E403 no npm permission' } })
       }
-      return Promise.resolve({ stdout: '' })
+      return undefined
     })
 
-    const { mod, cwdSpy } = await loadReleaseModule()
-    const exitSpy = vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
-      throw new Error(`process.exit:${code}`)
-    }) as never)
+    mockProcessExit()
 
-    await expect(mod.release({})).rejects.toThrow('process.exit')
-
+    await expect(release({ remote: 'origin' })).rejects.toThrow('process.exit:1')
     expect(loggerMock.error).toHaveBeenCalledWith('E403 no npm permission')
-    expect(exitSpy).toHaveBeenCalledWith(1)
-    cwdSpy.mockRestore()
+    // version was already bumped before publish — failure does NOT rollback
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+  })
+
+  it('exits safely when task throws', async () => {
+    promptsMock.confirm.mockResolvedValueOnce(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    const taskError = new Error('task failed')
+    mockProcessExit()
+
+    await expect(
+      release({
+        skipNpmPublish: true,
+        remote: 'origin',
+        task: vi.fn(() => {
+          throw taskError
+        }),
+      }),
+    ).rejects.toThrow('process.exit:1')
+    expect(loggerMock.error).toHaveBeenCalledWith(taskError)
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+  })
+
+  it('runs release flow without generating changelog when skipChangelog is enabled', async () => {
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    await release({ skipNpmPublish: true, skipChangelog: true, remote: 'origin' })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+  })
+
+  it('exits safely when pushGit fails (e.g. remote rejects push)', async () => {
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'git' && args[0] === 'push') {
+        return Promise.reject(new Error('remote: permission denied'))
+      }
+      return undefined
+    })
+
+    mockProcessExit()
+
+    await expect(release({ skipNpmPublish: true, skipChangelog: true, remote: 'origin' })).rejects.toThrow(
+      'process.exit:1',
+    )
+    // version was bumped before pushGit — failure does NOT rollback
+    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+  })
+})
+
+// ================================
+// Publish function tests (lightweight, call publish() directly)
+// ================================
+describe('publish function (lightweight)', () => {
+  let testSandbox: string
+  let testRepo: string
+
+  beforeEach(() => {
+    resetTestDoubles()
+    testSandbox = createSandbox('varlet-publish-light')
+    testRepo = join(testSandbox, 'repo')
+    ensureDirSync(testRepo)
+    writeFileSync(
+      join(testRepo, 'package.json'),
+      JSON.stringify({ name: 'varlet-e2e-dummy', version: '1.0.0', private: false }, null, 2),
+    )
+    vi.spyOn(process, 'cwd').mockReturnValue(testRepo)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    cleanupSandbox(testSandbox)
+  })
+
+  it('publishes with alpha tag when preRelease is true', async () => {
+    const publishCalls: string[][] = []
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'pnpm' && args.includes('publish')) {
+        publishCalls.push(args)
+        return Promise.resolve({ stdout: 'published ok', stderr: '' } as any)
+      }
+      return undefined
+    })
+
+    await publish({ preRelease: true })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    expect(publishCalls).toEqual([['-r', 'publish', '--no-git-checks', '--access', 'public', '--tag', 'alpha']])
+  })
+
+  it('forwards npmTag to pnpm publish', async () => {
+    const publishCalls: string[][] = []
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'pnpm' && args.includes('publish')) {
+        publishCalls.push(args)
+        return Promise.resolve({ stdout: 'published ok', stderr: '' } as any)
+      }
+      return undefined
+    })
+
+    await publish({ npmTag: 'beta' })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    expect(publishCalls).toEqual([['-r', 'publish', '--no-git-checks', '--access', 'public', '--tag', 'beta']])
+    expect(loggerMock.log).toHaveBeenCalledWith('published ok')
+  })
+
+  it('preRelease flag takes priority over npmTag (uses alpha, not custom tag)', async () => {
+    const publishCalls: string[][] = []
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'pnpm' && args.includes('publish')) {
+        publishCalls.push(args)
+        return Promise.resolve({ stdout: 'published ok', stderr: '' } as any)
+      }
+      return undefined
+    })
+
+    await publish({ preRelease: true, npmTag: 'beta' })
+
+    expect(loggerMock.error.mock.calls).toEqual([])
+    // preRelease should override npmTag — expect alpha, not beta
+    expect(publishCalls).toEqual([['-r', 'publish', '--no-git-checks', '--access', 'public', '--tag', 'alpha']])
+  })
+
+  it('skips publish when checkRemoteVersion detects same version', async () => {
+    const publishCalls: string[][] = []
+    mockExecOverride = createFullExecMock((cmd, args) => {
+      if (cmd === 'npm' && args[0] === 'view') {
+        return Promise.resolve({ stdout: '1.0.0', stderr: '' } as any)
+      }
+      if (cmd === 'pnpm' && args.includes('publish')) {
+        publishCalls.push(args)
+        return Promise.resolve({ stdout: 'should not publish', stderr: '' } as any)
+      }
+      return undefined
+    })
+
+    await publish({ checkRemoteVersion: true })
+
+    expect(loggerMock.error).toHaveBeenCalledWith('publishing automatically skipped.')
+    expect(publishCalls).toEqual([])
+  })
+})
+
+// ================================
+// Helper functions tests (lightweight)
+// ================================
+describe('release helper functions', () => {
+  let helperSandbox: string
+  let helperRepo: string
+
+  beforeEach(() => {
+    resetTestDoubles()
+    helperSandbox = createSandbox('varlet-release-helper')
+    helperRepo = join(helperSandbox, 'repo')
+    ensureDirSync(helperRepo)
+    writeFileSync(
+      join(helperRepo, 'package.json'),
+      JSON.stringify({ name: 'varlet-helper-dummy', version: '1.0.0', private: false }, null, 2),
+    )
+    vi.spyOn(process, 'cwd').mockReturnValue(helperRepo)
+  })
+
+  afterEach(() => {
+    vi.restoreAllMocks()
+    cleanupSandbox(helperSandbox)
+  })
+
+  it('getAllPackageJsons returns only root when no packages dir', () => {
+    const result = getAllPackageJsons()
+
+    expect(result).toEqual([join(helperRepo, 'package.json')])
+  })
+
+  it('getAllPackageJsons collects workspace packages', () => {
+    const packagesDir = join(helperRepo, 'packages')
+    const pkgAPath = join(packagesDir, 'pkg-a', 'package.json')
+    const pkgBPath = join(packagesDir, 'pkg-b', 'package.json')
+
+    ensureDirSync(join(packagesDir, 'pkg-a'))
+    ensureDirSync(join(packagesDir, 'pkg-b'))
+    writeFileSync(pkgAPath, JSON.stringify({ name: 'pkg-a', version: '1.0.0' }))
+    writeFileSync(pkgBPath, JSON.stringify({ name: 'pkg-b', version: '1.0.0' }))
+
+    const result = getAllPackageJsons()
+
+    expect(result).toHaveLength(3)
+    expect(result).toContainEqual(join(helperRepo, 'package.json'))
+    expect(result).toContainEqual(pkgAPath)
+    expect(result).toContainEqual(pkgBPath)
+  })
+
+  it('updateVersion updates root package.json version', () => {
+    updateVersion('2.0.0')
+
+    const pkg = fse.readJSONSync(join(helperRepo, 'package.json'))
+    expect(pkg.version).toBe('2.0.0')
+  })
+
+  it('updateVersion updates all workspace package versions', () => {
+    const packagesDir = join(helperRepo, 'packages')
+    const pkgAPath = join(packagesDir, 'pkg-a', 'package.json')
+    const pkgBPath = join(packagesDir, 'pkg-b', 'package.json')
+
+    ensureDirSync(join(packagesDir, 'pkg-a'))
+    ensureDirSync(join(packagesDir, 'pkg-b'))
+    writeFileSync(pkgAPath, JSON.stringify({ name: 'pkg-a', version: '1.0.0' }))
+    writeFileSync(pkgBPath, JSON.stringify({ name: 'pkg-b', version: '1.0.0' }))
+
+    updateVersion('2.0.0')
+
+    const rootPkg = fse.readJSONSync(join(helperRepo, 'package.json'))
+    const pkgA = fse.readJSONSync(pkgAPath)
+    const pkgB = fse.readJSONSync(pkgBPath)
+
+    expect(rootPkg.version).toBe('2.0.0')
+    expect(pkgA.version).toBe('2.0.0')
+    expect(pkgB.version).toBe('2.0.0')
   })
 })

@@ -55,13 +55,13 @@
     "package.json": "prettier --write"
   },
   "dependencies": {
-    "@clack/prompts": "^1.0.0",
+    "@clack/prompts": "^1.1.0",
     "commander": "^11.1.0",
     "conventional-changelog": "^5.1.0",
-    "fs-extra": "^11.3.3",
-    "rslog": "^2.0.0",
+    "fs-extra": "^11.3.4",
+    "rslog": "^2.0.1",
     "semver": "^7.5.4",
-    "tinyexec": "^1.0.2"
+    "tinyexec": "^1.0.4"
   },
   "devDependencies": {
     "@configurajs/eslint": "^0.1.2",
@@ -71,7 +71,7 @@
     "@types/fs-extra": "^11.0.4",
     "@types/node": "^22.14.0",
     "@types/semver": "^7.5.5",
-    "@vitest/coverage-v8": "^4.0.18",
+    "@vitest/coverage-v8": "^4.1.0",
     "eslint": "^9.39.2",
     "lint-staged": "^16.2.7",
     "prettier": "^3.8.1",
@@ -81,7 +81,7 @@
     "simple-git-hooks": "^2.13.1",
     "tsdown": "^0.20.3",
     "typescript": "^5.9.3",
-    "vitest": "^4.0.18"
+    "vitest": "^4.1.0"
   },
   "packageManager": "pnpm@10.28.2",
   "engines": {

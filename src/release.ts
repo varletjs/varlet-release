@@ -7,7 +7,7 @@ import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
 import { changelog } from './changelog'
 
-const cwd = process.cwd()
+const cwd = () => process.cwd()
 const { writeFileSync, readJSONSync, existsSync, readdirSync } = fse
 
 const releaseTypes = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
@@ -101,9 +101,9 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
 }
 
 export function getAllPackageJsons(): string[] {
-  const result = [resolve(cwd, 'package.json')]
+  const result = [resolve(cwd(), 'package.json')]
 
-  const packagesDir = resolve(cwd, 'packages')
+  const packagesDir = resolve(cwd(), 'packages')
   if (existsSync(packagesDir)) {
     for (const name of readdirSync(packagesDir)) {
       const pkgPath = resolve(packagesDir, name, 'package.json')
@@ -229,7 +229,7 @@ export interface ReleaseCommandOptions {
 
 export async function release(options: ReleaseCommandOptions): Promise<void> {
   try {
-    const currentVersion = readJSONSync(resolve(cwd, 'package.json')).version
+    const currentVersion = readJSONSync(resolve(cwd(), 'package.json')).version
 
     if (!currentVersion) {
       logger.error('Your package is missing the version field')

@@ -33,4 +33,4 @@ jobs:
           node dist/cli.js -V
 
       - name: Test
-        run: pnpm test
+        run: pnpm test run
