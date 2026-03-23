@@ -1,14 +1,14 @@
+import { existsSync, readdirSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { styleText } from 'node:util'
 import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
-import fse from 'fs-extra'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
 import { changelog } from './changelog'
+import { readJSONSync } from './utils'
 
 const cwd = () => process.cwd()
-const { writeFileSync, readJSONSync, existsSync, readdirSync } = fse
 
 const releaseTypes = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
 
@@ -100,32 +100,33 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   ret.stdout && logger.log(ret.stdout)
 }
 
-export function getAllPackageJsons(): string[] {
-  const result = [resolve(cwd(), 'package.json')]
-
+export function getPackageJsons(): {
+  filePath: string
+  config: {
+    name: string
+    version: string
+    private: boolean
+  }
+}[] {
+  const packageJsons = [resolve(cwd(), 'package.json')]
   const packagesDir = resolve(cwd(), 'packages')
   if (existsSync(packagesDir)) {
     for (const name of readdirSync(packagesDir)) {
       const pkgPath = resolve(packagesDir, name, 'package.json')
       if (existsSync(pkgPath)) {
-        result.push(pkgPath)
+        packageJsons.push(pkgPath)
       }
     }
   }
 
-  return result
-}
-function getPackageJsons() {
-  const packageJsons = getAllPackageJsons()
-
   return packageJsons.map((path) => {
     return {
-      config: readJSONSync(path) as {
+      filePath: path,
+      config: readJSONSync<{
         name: string
         version: string
         private: boolean
-      },
-      filePath: path,
+      }>(path),
     }
   })
 }
@@ -229,7 +230,7 @@ export interface ReleaseCommandOptions {
 
 export async function release(options: ReleaseCommandOptions): Promise<void> {
   try {
-    const currentVersion = readJSONSync(resolve(cwd(), 'package.json')).version
+    const currentVersion = readJSONSync<{ version: string }>(resolve(cwd(), 'package.json')).version
 
     if (!currentVersion) {
       logger.error('Your package is missing the version field')

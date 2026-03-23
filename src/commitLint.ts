@@ -1,8 +1,6 @@
-import fse from 'fs-extra'
+import { readFileSync } from 'node:fs'
 import { logger } from 'rslog'
 import semver from 'semver'
-
-const { readFileSync } = fse
 
 export const COMMIT_HEADER_RE: RegExp =
   /^(revert|fix|feat|docs|perf|test|types|style|build|chore|release|refactor|merge|wip)(?:\(([^)]+)\))?(!)?:\s(.+)$/

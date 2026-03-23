@@ -1,12 +1,17 @@
+import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
-import fse from 'fs-extra'
 // Need to import x *after* the mock has been configured!
 import { x as exec } from 'tinyexec'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
 // Static import — works because release.ts now calls process.cwd() lazily
 // instead of capturing it at module load time.
-import { getAllPackageJsons, publish, release, updateVersion } from '../src/release'
+import { getPackageJsons, publish, release, updateVersion } from '../src/release'
+import { readJSONSync } from '../src/utils'
+
+function ensureDirSync(path: string) {
+  mkdirSync(path, { recursive: true })
+}
 
 // Global execution override for specific failure testing
 let mockExecOverride: null | ((cmd: string, args: string[]) => Promise<any> | undefined) = null
@@ -37,8 +42,6 @@ vi.mock('tinyexec', async (importOriginal) => {
     },
   }
 })
-
-const { writeFileSync, ensureDirSync, removeSync, copySync } = fse
 
 const loggerMock = vi.hoisted(() => ({
   error: vi.fn(),
@@ -120,7 +123,7 @@ async function setupGitRepo(testRepo: string, testRemote: string) {
 function cleanupSandbox(testSandbox?: string) {
   try {
     // On windows sometimes git execution keeps lock on objects
-    testSandbox && removeSync(testSandbox)
+    testSandbox && rmSync(testSandbox, { recursive: true, force: true })
   } catch {
     /* empty */
   }
@@ -186,8 +189,8 @@ describe('release E2E (real git)', () => {
   async function cloneSandboxFromTemplate(targetSandbox: string) {
     const targetRepo = join(targetSandbox, 'repo')
     const targetRemote = join(targetSandbox, 'remote.git')
-    copySync(join(templateSandbox, 'repo'), targetRepo)
-    copySync(join(templateSandbox, 'remote.git'), targetRemote)
+    cpSync(join(templateSandbox, 'repo'), targetRepo, { recursive: true })
+    cpSync(join(templateSandbox, 'remote.git'), targetRemote, { recursive: true })
     await exec('git', ['remote', 'set-url', 'origin', targetRemote], { nodeOptions: { cwd: targetRepo } })
     return targetRepo
   }
@@ -235,9 +238,9 @@ describe('release E2E (real git)', () => {
     expect(loggerMock.error.mock.calls).toEqual([])
     expect(taskSpy).toHaveBeenCalledWith('1.0.1', '1.0.0')
 
-    const pkg = fse.readJSONSync(join(testRepo, 'package.json'))
+    const pkg = readJSONSync(join(testRepo, 'package.json'))
     expect(pkg.version).toBe('1.0.1')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
 
     const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
     expect(tags.stdout).toContain('v1.0.1')
@@ -264,12 +267,12 @@ describe('release E2E (real git)', () => {
 
     expect(loggerMock.error.mock.calls).toEqual([])
 
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
     const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
     expect(tags.stdout.trim()).toBe('')
 
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
-    expect(fse.readJSONSync(workspacePkgPath).version).toBe('1.0.0')
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(readJSONSync(workspacePkgPath).version).toBe('1.0.0')
     expect((await exec('git', ['status'], { nodeOptions: { cwd: testRepo } })).stdout).toContain('working tree clean')
   })
 
@@ -284,8 +287,8 @@ describe('release E2E (real git)', () => {
     await release({ skipNpmPublish: true, skipGitTag: true, remote: 'origin' })
 
     expect(loggerMock.error.mock.calls).toEqual([])
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
     expect(await getGitTags(testRepo)).toBe('')
     expect(
       (await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })).stdout.trim(),
@@ -335,8 +338,8 @@ describe('release process (lightweight)', () => {
 
     expect(taskSpy).not.toHaveBeenCalled()
     expect(promptsMock.select).not.toHaveBeenCalled()
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('stops when registry confirmation is rejected', async () => {
@@ -347,8 +350,8 @@ describe('release process (lightweight)', () => {
 
     expect(taskSpy).not.toHaveBeenCalled()
     expect(promptsMock.select).not.toHaveBeenCalled()
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('stops when remote version matches', async () => {
@@ -367,8 +370,8 @@ describe('release process (lightweight)', () => {
 
     expect(loggerMock.error).toHaveBeenCalledWith('Please check remote version.')
     expect(taskSpy).not.toHaveBeenCalled()
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('continues release when isSameVersion returns false (version not on remote)', async () => {
@@ -400,8 +403,8 @@ describe('release process (lightweight)', () => {
     await expect(release({ remote: 'origin' })).rejects.toThrow('process.exit:1')
     expect(loggerMock.error).toHaveBeenCalledWith('E403 no npm permission')
     // version was already bumped before publish — failure does NOT rollback
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('exits safely when task throws', async () => {
@@ -421,7 +424,7 @@ describe('release process (lightweight)', () => {
       }),
     ).rejects.toThrow('process.exit:1')
     expect(loggerMock.error).toHaveBeenCalledWith(taskError)
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('runs release flow without generating changelog when skipChangelog is enabled', async () => {
@@ -431,8 +434,8 @@ describe('release process (lightweight)', () => {
     await release({ skipNpmPublish: true, skipChangelog: true, remote: 'origin' })
 
     expect(loggerMock.error.mock.calls).toEqual([])
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
-    expect(fse.existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
   it('exits safely when pushGit fails (e.g. remote rejects push)', async () => {
@@ -452,7 +455,7 @@ describe('release process (lightweight)', () => {
       'process.exit:1',
     )
     // version was bumped before pushGit — failure does NOT rollback
-    expect(fse.readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
   })
 })
 
@@ -574,13 +577,14 @@ describe('release helper functions', () => {
     cleanupSandbox(helperSandbox)
   })
 
-  it('getAllPackageJsons returns only root when no packages dir', () => {
-    const result = getAllPackageJsons()
+  it('getPackageJsons returns only root when no packages dir', () => {
+    const result = getPackageJsons()
 
-    expect(result).toEqual([join(helperRepo, 'package.json')])
+    expect(result.map((r) => r.filePath)).toEqual([join(helperRepo, 'package.json')])
+    expect(result[0].config.name).toBe('varlet-helper-dummy')
   })
 
-  it('getAllPackageJsons collects workspace packages', () => {
+  it('getPackageJsons collects workspace packages', () => {
     const packagesDir = join(helperRepo, 'packages')
     const pkgAPath = join(packagesDir, 'pkg-a', 'package.json')
     const pkgBPath = join(packagesDir, 'pkg-b', 'package.json')
@@ -590,18 +594,19 @@ describe('release helper functions', () => {
     writeFileSync(pkgAPath, JSON.stringify({ name: 'pkg-a', version: '1.0.0' }))
     writeFileSync(pkgBPath, JSON.stringify({ name: 'pkg-b', version: '1.0.0' }))
 
-    const result = getAllPackageJsons()
+    const result = getPackageJsons()
 
     expect(result).toHaveLength(3)
-    expect(result).toContainEqual(join(helperRepo, 'package.json'))
-    expect(result).toContainEqual(pkgAPath)
-    expect(result).toContainEqual(pkgBPath)
+    const filePaths = result.map((r) => r.filePath)
+    expect(filePaths).toContainEqual(join(helperRepo, 'package.json'))
+    expect(filePaths).toContainEqual(pkgAPath)
+    expect(filePaths).toContainEqual(pkgBPath)
   })
 
   it('updateVersion updates root package.json version', () => {
     updateVersion('2.0.0')
 
-    const pkg = fse.readJSONSync(join(helperRepo, 'package.json'))
+    const pkg = readJSONSync(join(helperRepo, 'package.json'))
     expect(pkg.version).toBe('2.0.0')
   })
 
@@ -617,9 +622,9 @@ describe('release helper functions', () => {
 
     updateVersion('2.0.0')
 
-    const rootPkg = fse.readJSONSync(join(helperRepo, 'package.json'))
-    const pkgA = fse.readJSONSync(pkgAPath)
-    const pkgB = fse.readJSONSync(pkgBPath)
+    const rootPkg = readJSONSync(join(helperRepo, 'package.json'))
+    const pkgA = readJSONSync(pkgAPath)
+    const pkgB = readJSONSync(pkgBPath)
 
     expect(rootPkg.version).toBe('2.0.0')
     expect(pkgA.version).toBe('2.0.0')
