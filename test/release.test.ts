@@ -118,6 +118,8 @@ async function setupGitRepo(testRepo: string, testRemote: string) {
   }
 
   await exec('git', ['push', '-u', 'origin', branchName], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['tag', 'v1.0.0'], { nodeOptions: { cwd: testRepo } })
+  await exec('git', ['push', 'origin', 'v1.0.0'], { nodeOptions: { cwd: testRepo } })
 }
 
 function cleanupSandbox(testSandbox?: string) {
@@ -269,7 +271,7 @@ describe('release E2E (real git)', () => {
 
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
     const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
-    expect(tags.stdout.trim()).toBe('')
+    expect(tags.stdout.trim()).toContain('v1.0.0')
 
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
     expect(readJSONSync(workspacePkgPath).version).toBe('1.0.0')
@@ -289,10 +291,10 @@ describe('release E2E (real git)', () => {
     expect(loggerMock.error.mock.calls).toEqual([])
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
-    expect(await getGitTags(testRepo)).toBe('')
+    expect(await getGitTags(testRepo)).toBe('v1.0.0')
     expect(
       (await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })).stdout.trim(),
-    ).toBe('')
+    ).toContain('refs/tags/v1.0.0')
     expect(await getCommitCount(testRepo)).toBe('3')
   })
 })
