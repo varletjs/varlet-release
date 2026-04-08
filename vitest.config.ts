@@ -10,4 +10,9 @@ export default defineConfig({
       exclude: ['src/changelog.ts', 'dist/**', 'node_modules/**', 'test/**'],
     },
   },
+  server: {
+    watch: {
+      ignored: ['**/package.json'],
+    },
+  },
 })

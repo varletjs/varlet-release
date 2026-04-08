@@ -1,3 +1,3 @@
-export * from './release'
-export * from './changelog'
-export * from './commitLint'
+export * from './release.ts'
+export * from './changelog.ts'
+export * from './commitLint.ts'

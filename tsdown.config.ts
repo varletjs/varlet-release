@@ -5,4 +5,7 @@ export default defineConfig({
   format: 'esm',
   outDir: 'dist',
   fixedExtension: false,
+  dts: {
+    entry: ['src/index.ts'],
+  },
 })

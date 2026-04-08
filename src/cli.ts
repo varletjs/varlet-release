@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { Command } from 'commander'
 import pkg from '../package.json' with { type: 'json' }
-import { changelog, commitLint, publish, release } from './index'
+import { changelog, commitLint, publish, release } from './index.ts'
 
 const program = new Command()
 

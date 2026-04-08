@@ -5,8 +5,8 @@ import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
-import { changelog } from './changelog'
-import { readJSONSync } from './utils'
+import { changelog } from './changelog.ts'
+import { readJSONSync } from './utils.ts'
 
 const cwd = () => process.cwd()
 

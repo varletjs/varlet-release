@@ -3,16 +3,17 @@
     "target": "esnext",
     "strict": true,
     "declaration": true,
+    "noEmit": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
-    "downlevelIteration": true,
     "resolveJsonModule": true,
-    "jsx": "preserve",
-    "lib": ["esnext", "dom"],
-    "module": "esnext",
-    "moduleResolution": "node",
+    "lib": ["esnext"],
+    "types": ["node"],
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "outDir": "./lib",
-    "isolatedDeclarations": true
+    "isolatedDeclarations": true,
+    "allowImportingTsExtensions": true
   },
   "include": ["src"],
   "exclude": ["node_modules"]

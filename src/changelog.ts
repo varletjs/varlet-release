@@ -2,7 +2,7 @@ import { createWriteStream } from 'node:fs'
 import { resolve as resolvePath } from 'node:path'
 import { spinner } from '@clack/prompts'
 import conventionalChangelog from 'conventional-changelog'
-import { COMMIT_HEADER_RE } from './commitLint'
+import { COMMIT_HEADER_RE } from './commitLint.ts'
 
 const COMMIT_TYPE_MAP: Record<string, string> = {
   feat: 'Features',
