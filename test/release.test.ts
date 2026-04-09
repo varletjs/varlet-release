@@ -3,7 +3,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 // Need to import x *after* the mock has been configured!
 import { x as exec } from 'tinyexec'
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 // Static import — works because release.ts now calls process.cwd() lazily
 // instead of capturing it at module load time.
 import { getPackageJsons, publish, release, updateVersion } from '../src/release'
@@ -35,7 +35,7 @@ vi.mock('tinyexec', async (importOriginal) => {
         ...opts,
         nodeOptions: {
           cwd: process.cwd(),
-          ...(opts?.nodeOptions || {}),
+          ...opts?.nodeOptions,
         },
       }
       return actual.x(cmd, args, injectedOpts)
