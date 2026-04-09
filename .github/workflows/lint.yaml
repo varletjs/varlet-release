@@ -19,3 +19,20 @@ jobs:
       - run: vp check
       - run: vp test
       - run: vp build
+  lint2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: '22'
+          cache: true
+      - run: vp install
+      - name: Debug file details
+        run: |
+          ls -la
+          file package.json
+          cat -A package.json | head -20
+          cat package.json
+      - run: vp check
+      - run: vp test
+      - run: vp build
