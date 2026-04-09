@@ -4,7 +4,7 @@ on: [push, pull_request]
 
 jobs:
   lint:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
       - uses: voidzero-dev/setup-vp@v1
         with:
@@ -13,9 +13,7 @@ jobs:
       - run: vp install
       - name: Debug file details
         run: |
-          ls -la
-          file package.json
-          cat -A package.json | head -20
+          cat package.json
       - run: vp check
       - run: vp test
       - run: vp build
