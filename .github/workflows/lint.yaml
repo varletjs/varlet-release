@@ -16,4 +16,4 @@ jobs:
       - run: vp install
       - run: vp check
       - run: vp test
-      - run: vp build
+      - run: vp pack
