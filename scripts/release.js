@@ -5,7 +5,7 @@ release({
   checkRemoteVersion: true,
   task: async () => {
     console.log('Building the project...')
-    await exec('pnpm', ['run', 'build'])
+    await exec('vp', ['pack'])
     console.log('Build completed.')
   },
 })
