@@ -18,8 +18,9 @@ export default defineConfig({
     vue: false,
   }),
   fmt: {
-    ...fmt(),
-    ignorePatterns: ['dist/**', 'CHANGELOG.md'],
+    ...fmt({
+      ignores: ['dist/**', 'CHANGELOG.md'],
+    }),
   },
   test: {
     environment: 'node',

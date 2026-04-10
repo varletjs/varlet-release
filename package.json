@@ -37,7 +37,7 @@
     "release:dev": "vp pack && node scripts/release.js",
     "test": "vp test",
     "test:coverage": "vp test run --coverage",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsgo --noEmit"
   },
   "dependencies": {
     "@clack/prompts": "^1.2.0",
@@ -48,14 +48,13 @@
     "tinyexec": "^1.1.1"
   },
   "devDependencies": {
-    "@configurajs/vite-plus": "^0.1.11",
+    "@configurajs/vite-plus": "^0.2.2",
     "@types/conventional-changelog": "^3.1.5",
     "@types/node": "^22.14.0",
     "@types/semver": "^7.7.1",
-    "@vitest/coverage-v8": "^4.1.3",
-    "typescript": "^6.0.2",
-    "vite-plus": "catalog:",
-    "vitest": "catalog:"
+    "@typescript/native-preview": "7.0.0-dev.20260410.1",
+    "@vitest/coverage-v8": "^4.1.4",
+    "vite-plus": "catalog:"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
