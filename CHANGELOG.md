@@ -1,3 +1,15 @@
+# [1.2.0](https://github.com/varletjs/release/compare/v1.1.0...v1.2.0) (2026-04-10)
+
+
+### Code Refactoring
+
+* move from build, lint, fmt to the all-in-one package of vite-plus ([#45](https://github.com/varletjs/release/issues/45)) ([2448309](https://github.com/varletjs/release/commit/2448309497e678618cc91515964c0f8202490e34))
+
+
+### Features
+
+* upgrade typescript@6 and some deps ([ed3d970](https://github.com/varletjs/release/commit/ed3d97027ad96c889a9cab440fdd41daac57780b))
+
 # [1.1.0](https://github.com/varletjs/release/compare/v1.0.2...v1.1.0) (2026-03-23)
 
 
