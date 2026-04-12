@@ -228,6 +228,7 @@ export function changelog({
       .options({
         releaseCount,
         transformCommit,
+        outputUnreleased: true,
       })
       .writer({
         mainTemplate,
