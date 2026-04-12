@@ -31,8 +31,8 @@ function unwrapPromptResult<T>(result: T | symbol): T {
   return result
 }
 
-function execGit(...args: string[]) {
-  return exec('git', args, { throwOnError: true })
+async function execGit(...args: string[]) {
+  return await exec('git', args, { throwOnError: true })
 }
 
 function logStdout(ret: { stdout: string }) {
