@@ -97,7 +97,7 @@ function processBreakingChanges(commit: any, context: Context, issues: string[])
   const hashLink = getCommitHashLink()
 
   const addBreakingNote = () => {
-    const text =
+    let text =
       linkify(
         typeof commit.subject === 'string' && commit.subject
           ? commit.subject
@@ -107,6 +107,16 @@ function processBreakingChanges(commit: any, context: Context, issues: string[])
         context,
         issues,
       ) + hashLink
+
+    if (commit.body) {
+      const body = linkify(commit.body, context, issues)
+      const indentedBody = body
+        .split('\n')
+        .map((line) => (line.trim() ? `  ${line}` : ''))
+        .join('\n')
+      text += `\n\n${indentedBody}`
+    }
+
     commit.notes.push({ title: 'BREAKING CHANGES', text })
     discard = false
   }
