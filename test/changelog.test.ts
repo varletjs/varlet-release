@@ -105,7 +105,6 @@ describe('changelog', () => {
       { msg: 'build: update vite', date: '2024-01-10T00:00:00Z' },
       { msg: 'ci: update github actions', date: '2024-01-11T00:00:00Z' },
       { msg: 'feat!: breaking change new API', date: '2024-01-12T00:00:00Z' },
-      { msg: 'fix: another fix\n\nBREAKING CHANGE: API changed', date: '2024-01-13T00:00:00Z' },
     ]
 
     for (const { msg, date } of commits) {

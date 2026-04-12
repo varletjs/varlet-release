@@ -6,13 +6,11 @@ exports[`changelog > should generate changelog and match snapshot 1`] = `
 
 ### BREAKING CHANGES
 
-* API changed ([67b2e3c](undefined/undefined/release/commit/67b2e3c87ace8a8dca5d18d3a49c31e3e0d8cd03))
 * breaking change new API ([0b20d03](undefined/undefined/release/commit/0b20d03f0e8edc5c0b02a4d2895a875b73857d05))
 
 
 ### Bug Fixes
 
-* another fix ([67b2e3c](https://github.com/varletjs/release/commit/67b2e3c87ace8a8dca5d18d3a49c31e3e0d8cd03))
 * handle error ([2606dda](https://github.com/varletjs/release/commit/2606ddaf0078c8f612d53f64697c0702c17070e5))
 
 

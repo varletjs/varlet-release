@@ -20,8 +20,6 @@ const COMMIT_TYPE_MAP: Record<string, string> = {
 
 const ALWAYS_SHOW_TYPES = new Set(['feat', 'fix', 'perf', 'revert', 'refactor'])
 
-const BREAKING_CHANGE_RE = /BREAKING CHANGES?:\s*([\s\S]+)/
-
 const MAIN_TEMPLATE = `{{> header}}
 
 {{> footer}}
@@ -65,23 +63,6 @@ function linkify(text: string, context: Context, issues: string[]): string {
   return result
 }
 
-function extractBreakingText(commit: any): string {
-  const body = typeof commit.body === 'string' ? commit.body : ''
-  const footer = typeof commit.footer === 'string' ? commit.footer : ''
-  const match = BREAKING_CHANGE_RE.exec(`${footer}\n${body}`)
-
-  if (match?.[1]) {
-    return match[1].trim()
-  }
-  if (typeof commit.subject === 'string' && commit.subject) {
-    return commit.subject
-  }
-  if (typeof commit.header === 'string' && commit.header) {
-    return commit.header
-  }
-  return ''
-}
-
 function tryParseHeader(commit: any): { type: string; scope?: string; subject?: string; isBreaking: boolean } | null {
   if (typeof commit.header !== 'string') {
     return null
@@ -102,6 +83,8 @@ function tryParseHeader(commit: any): { type: string; scope?: string; subject?: 
 function processBreakingChanges(commit: any, context: Context, issues: string[]): boolean {
   let discard = true
 
+  commit.notes = []
+
   const getCommitHashLink = () => {
     if (!commit.hash) {
       return ''
@@ -113,25 +96,18 @@ function processBreakingChanges(commit: any, context: Context, issues: string[])
 
   const hashLink = getCommitHashLink()
 
-  if (commit.notes && commit.notes.length > 0) {
-    discard = false
-    commit.notes = commit.notes.map((note: any) => ({
-      ...note,
-      title: note.title === 'BREAKING CHANGE' ? 'BREAKING CHANGES' : note.title,
-      text: commit.hash && note.text.includes(commit.hash.substring(0, 7)) ? note.text : note.text + hashLink,
-    }))
-  }
-
-  const hadBreakingNotes = commit.notes && commit.notes.length > 0
-
   const addBreakingNote = () => {
-    if (!hadBreakingNotes) {
-      const text = linkify(extractBreakingText(commit), context, issues) + hashLink
-      if (!commit.notes) {
-        commit.notes = []
-      }
-      commit.notes.push({ title: 'BREAKING CHANGES', text })
-    }
+    const text =
+      linkify(
+        typeof commit.subject === 'string' && commit.subject
+          ? commit.subject
+          : typeof commit.header === 'string' && commit.header
+            ? commit.header
+            : '',
+        context,
+        issues,
+      ) + hashLink
+    commit.notes.push({ title: 'BREAKING CHANGES', text })
     discard = false
   }
 
