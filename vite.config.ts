@@ -28,7 +28,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       reporter: ['text', 'html'],
-      exclude: ['src/changelog.ts', 'dist/**', 'node_modules/**', 'test/**'],
+      exclude: ['dist/**', 'node_modules/**', 'test/**'],
     },
   },
   server: {

@@ -1,10 +1,10 @@
 import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { join, resolve } from 'node:path'
 // Need to import x *after* the mock has been configured!
 import { x as exec } from 'tinyexec'
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
-// Static import — works because release.ts now calls process.cwd() lazily
+// Static import 鈥?works because release.ts now calls process.cwd() lazily
 // instead of capturing it at module load time.
 import { getPackageJsons, publish, release, updateVersion } from '../src/release'
 import { readJSONSync } from '../src/utils'
@@ -19,6 +19,8 @@ let mockExecOverride: null | ((cmd: string, args: string[]) => Promise<any> | un
 // Symbol used to simulate user cancellation in @clack/prompts.
 // When a prompt returns this symbol, isCancel() returns true.
 const CANCEL_SYMBOL = Symbol.for('clack:cancel')
+
+const SANDBOX_ROOT = resolve(tmpdir())
 
 vi.mock('tinyexec', async (importOriginal) => {
   const actual = await importOriginal<typeof import('tinyexec')>()
@@ -37,6 +39,12 @@ vi.mock('tinyexec', async (importOriginal) => {
           cwd: process.cwd(),
           ...opts?.nodeOptions,
         },
+      }
+      const effectiveCwd = resolve(injectedOpts.nodeOptions.cwd)
+      if (!effectiveCwd.startsWith(SANDBOX_ROOT)) {
+        throw new Error(
+          `Safety guard: refusing to run "${cmd} ${args.join(' ')}" outside sandbox. cwd="${effectiveCwd}"`,
+        )
       }
       return actual.x(cmd, args, injectedOpts)
     },
@@ -94,37 +102,42 @@ async function setupGitRepo(testRepo: string, testRemote: string) {
   ensureDirSync(testRepo)
   ensureDirSync(testRemote)
 
-  await exec('git', ['init', '--bare'], { nodeOptions: { cwd: testRemote } })
-  await exec('git', ['init'], { nodeOptions: { cwd: testRepo } })
+  const cwdSpy = vi.spyOn(process, 'cwd').mockReturnValue(testRepo)
 
-  await exec('git', ['config', 'user.name', 'Tester'], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['config', 'user.email', 'test@example.com'], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['config', 'commit.gpgsign', 'false'], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['config', 'core.autocrlf', 'false'], { nodeOptions: { cwd: testRepo } })
+  try {
+    await exec('git', ['init', '--bare', testRemote])
+    await exec('git', ['init'])
 
-  writeFileSync(
-    join(testRepo, 'package.json'),
-    JSON.stringify({ name: 'varlet-e2e-dummy', version: '1.0.0', private: false }, null, 2),
-  )
+    await exec('git', ['config', 'user.name', 'Tester'])
+    await exec('git', ['config', 'user.email', 'test@example.com'])
+    await exec('git', ['config', 'commit.gpgsign', 'false'])
+    await exec('git', ['config', 'core.autocrlf', 'false'])
 
-  await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['commit', '-m', 'chore: initial commit'], { nodeOptions: { cwd: testRepo } })
+    writeFileSync(
+      join(testRepo, 'package.json'),
+      JSON.stringify({ name: 'varlet-e2e-dummy', version: '1.0.0', private: false }, null, 2),
+    )
 
-  await exec('git', ['remote', 'add', 'origin', testRemote], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['add', '.'])
+    await exec('git', ['commit', '-m', 'chore: initial commit'])
 
-  let branchName = (await exec('git', ['branch', '--show-current'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
-  if (!branchName) {
-    branchName = 'master'
+    await exec('git', ['remote', 'add', 'origin', testRemote])
+
+    let branchName = (await exec('git', ['branch', '--show-current'])).stdout.trim()
+    if (!branchName) {
+      branchName = 'master'
+    }
+
+    await exec('git', ['push', '-u', 'origin', branchName])
+    await exec('git', ['tag', 'v1.0.0'])
+    await exec('git', ['push', 'origin', 'v1.0.0'])
+  } finally {
+    cwdSpy.mockRestore()
   }
-
-  await exec('git', ['push', '-u', 'origin', branchName], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['tag', 'v1.0.0'], { nodeOptions: { cwd: testRepo } })
-  await exec('git', ['push', 'origin', 'v1.0.0'], { nodeOptions: { cwd: testRepo } })
 }
 
 function cleanupSandbox(testSandbox?: string) {
   try {
-    // On windows sometimes git execution keeps lock on objects
     testSandbox && rmSync(testSandbox, { recursive: true, force: true })
   } catch {
     /* empty */
@@ -137,12 +150,12 @@ function mockProcessExit() {
   }) as never)
 }
 
-async function getGitTags(testRepo: string) {
-  return (await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
+async function getGitTags() {
+  return (await exec('git', ['tag'])).stdout.trim()
 }
 
-async function getCommitCount(testRepo: string) {
-  return (await exec('git', ['rev-list', '--count', 'HEAD'], { nodeOptions: { cwd: testRepo } })).stdout.trim()
+async function getCommitCount() {
+  return (await exec('git', ['rev-list', '--count', 'HEAD'])).stdout.trim()
 }
 
 /**
@@ -193,7 +206,7 @@ describe('release E2E (real git)', () => {
     const targetRemote = join(targetSandbox, 'remote.git')
     cpSync(join(templateSandbox, 'repo'), targetRepo, { recursive: true })
     cpSync(join(templateSandbox, 'remote.git'), targetRemote, { recursive: true })
-    await exec('git', ['remote', 'set-url', 'origin', targetRemote], { nodeOptions: { cwd: targetRepo } })
+    await exec('git', ['remote', 'set-url', 'origin', targetRemote])
     return targetRepo
   }
 
@@ -209,8 +222,9 @@ describe('release E2E (real git)', () => {
   beforeEach(async () => {
     resetTestDoubles()
     testSandbox = createSandbox('varlet-release-e2e')
-    testRepo = await cloneSandboxFromTemplate(testSandbox)
+    testRepo = join(testSandbox, 'repo')
     vi.spyOn(process, 'cwd').mockReturnValue(testRepo)
+    await cloneSandboxFromTemplate(testSandbox)
   })
 
   afterEach(() => {
@@ -228,8 +242,8 @@ describe('release E2E (real git)', () => {
 
   it('runs complete positive release flow properly', async () => {
     writeFileSync(join(testRepo, 'test1.txt'), 'hello')
-    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
-    await exec('git', ['commit', '-m', 'feat: initial feature'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['add', '.'])
+    await exec('git', ['commit', '-m', 'feat: initial feature'])
 
     promptsMock.confirm.mockResolvedValue(true)
     promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
@@ -244,13 +258,13 @@ describe('release E2E (real git)', () => {
     expect(pkg.version).toBe('1.0.1')
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
 
-    const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
+    const tags = await exec('git', ['tag'])
     expect(tags.stdout).toContain('v1.0.1')
 
-    const statusObj = await exec('git', ['status'], { nodeOptions: { cwd: testRepo } })
+    const statusObj = await exec('git', ['status'])
     expect(statusObj.stdout).toContain('working tree clean')
 
-    const remoteTags = await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })
+    const remoteTags = await exec('git', ['ls-remote', '--tags', 'origin'])
     expect(remoteTags.stdout).toContain('refs/tags/v1.0.1')
   })
 
@@ -258,9 +272,9 @@ describe('release E2E (real git)', () => {
     const workspacePkgPath = join(testRepo, 'packages', 'pkg-a', 'package.json')
     ensureDirSync(join(testRepo, 'packages', 'pkg-a'))
     writeFileSync(workspacePkgPath, JSON.stringify({ name: 'pkg-a', version: '1.0.0' }, null, 2))
-    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
-    await exec('git', ['commit', '-m', 'feat: workspace package'], { nodeOptions: { cwd: testRepo } })
-    await exec('git', ['push'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['add', '.'])
+    await exec('git', ['commit', '-m', 'feat: workspace package'])
+    await exec('git', ['push'])
 
     promptsMock.confirm.mockResolvedValue(true)
     promptsMock.select.mockResolvedValueOnce('prepatch').mockResolvedValue('confirm')
@@ -270,18 +284,18 @@ describe('release E2E (real git)', () => {
     expect(loggerMock.error.mock.calls).toEqual([])
 
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
-    const tags = await exec('git', ['tag'], { nodeOptions: { cwd: testRepo } })
+    const tags = await exec('git', ['tag'])
     expect(tags.stdout.trim()).toContain('v1.0.0')
 
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
     expect(readJSONSync(workspacePkgPath).version).toBe('1.0.0')
-    expect((await exec('git', ['status'], { nodeOptions: { cwd: testRepo } })).stdout).toContain('working tree clean')
+    expect((await exec('git', ['status'])).stdout).toContain('working tree clean')
   })
 
   it('runs release flow without creating a git tag when skipGitTag is enabled', async () => {
     writeFileSync(join(testRepo, 'test-skip-git-tag.txt'), 'hello')
-    await exec('git', ['add', '.'], { nodeOptions: { cwd: testRepo } })
-    await exec('git', ['commit', '-m', 'feat: skip git tag coverage'], { nodeOptions: { cwd: testRepo } })
+    await exec('git', ['add', '.'])
+    await exec('git', ['commit', '-m', 'feat: skip git tag coverage'])
 
     promptsMock.confirm.mockResolvedValue(true)
     promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
@@ -291,11 +305,9 @@ describe('release E2E (real git)', () => {
     expect(loggerMock.error.mock.calls).toEqual([])
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(true)
-    expect(await getGitTags(testRepo)).toBe('v1.0.0')
-    expect(
-      (await exec('git', ['ls-remote', '--tags', 'origin'], { nodeOptions: { cwd: testRepo } })).stdout.trim(),
-    ).toContain('refs/tags/v1.0.0')
-    expect(await getCommitCount(testRepo)).toBe('3')
+    expect(await getGitTags()).toBe('v1.0.0')
+    expect((await exec('git', ['ls-remote', '--tags', 'origin'])).stdout.trim()).toContain('refs/tags/v1.0.0')
+    expect(await getCommitCount()).toBe('3')
   })
 })
 
@@ -404,7 +416,7 @@ describe('release process (lightweight)', () => {
 
     await expect(release({ remote: 'origin' })).rejects.toThrow('process.exit:1')
     expect(loggerMock.error).toHaveBeenCalledWith('E403 no npm permission')
-    // version was already bumped before publish — failure does NOT rollback
+    // version was already bumped before publish 鈥?failure does NOT rollback
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
@@ -456,7 +468,7 @@ describe('release process (lightweight)', () => {
     await expect(release({ skipNpmPublish: true, skipChangelog: true, remote: 'origin' })).rejects.toThrow(
       'process.exit:1',
     )
-    // version was bumped before pushGit — failure does NOT rollback
+    // version was bumped before pushGit 鈥?failure does NOT rollback
     expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
   })
 })
@@ -531,7 +543,7 @@ describe('publish function (lightweight)', () => {
     await publish({ preRelease: true, npmTag: 'beta' })
 
     expect(loggerMock.error.mock.calls).toEqual([])
-    // preRelease should override npmTag — expect alpha, not beta
+    // preRelease should override npmTag 鈥?expect alpha, not beta
     expect(publishCalls).toEqual([['-r', 'publish', '--no-git-checks', '--access', 'public', '--tag', 'alpha']])
   })
 
@@ -631,5 +643,42 @@ describe('release helper functions', () => {
     expect(rootPkg.version).toBe('2.0.0')
     expect(pkgA.version).toBe('2.0.0')
     expect(pkgB.version).toBe('2.0.0')
+  })
+
+  it('throws error when version increment fails with invalid release type', async () => {
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('invalid-type' as any).mockResolvedValue('confirm')
+
+    mockExecOverride = createFullExecMock()
+    mockProcessExit()
+
+    await expect(release({ skipNpmPublish: true, skipChangelog: true })).rejects.toThrow('process.exit:1')
+
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringMatching(/Failed to increment version 1\.0\.0 with type invalid-type/),
+      }),
+    )
+  })
+
+  it('throws error when version increment fails with malformed current version', async () => {
+    writeFileSync(
+      join(helperRepo, 'package.json'),
+      JSON.stringify({ name: 'varlet-helper-dummy', version: 'not-a-semver', private: false }, null, 2),
+    )
+
+    promptsMock.confirm.mockResolvedValue(true)
+    promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')
+
+    mockExecOverride = createFullExecMock()
+    mockProcessExit()
+
+    await expect(release({ skipNpmPublish: true, skipChangelog: true })).rejects.toThrow('process.exit:1')
+
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      expect.objectContaining({
+        message: expect.stringMatching(/Failed to increment version not-a-semver with type patch/),
+      }),
+    )
   })
 })

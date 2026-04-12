@@ -8,23 +8,50 @@ import { x as exec } from 'tinyexec'
 import { changelog } from './changelog.ts'
 import { readJSONSync } from './utils.ts'
 
-const cwd = () => process.cwd()
+const RELEASE_TYPES = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
 
-const releaseTypes = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
+const BACK_VALUE = 'back' as const
 
-const BACK_HINT = 'Back to previous step' as const
+interface PackageJsonConfig {
+  name: string
+  version: string
+  private: boolean
+}
+
+interface PackageJsonEntry {
+  filePath: string
+  config: PackageJsonConfig
+}
+
+function unwrapPromptResult<T>(result: T | symbol): T {
+  if (isCancel(result)) {
+    cancel('Operation cancelled.')
+    process.exit(0)
+  }
+  return result
+}
+
+function execGit(...args: string[]) {
+  return exec('git', args, { throwOnError: true })
+}
+
+function logStdout(ret: { stdout: string }) {
+  if (ret.stdout) {
+    logger.log(ret.stdout)
+  }
+}
 
 async function isWorktreeEmpty() {
   const ret = await exec('git', ['status', '--porcelain'])
   return !ret.stdout
 }
 
-export async function isSameVersion(version?: string): Promise<boolean | undefined> {
+export async function isSameVersion(version?: string, cwd: string = process.cwd()): Promise<boolean | undefined> {
   const s = spinner()
   s.start('Check remote version...')
 
-  const packageJsones = getPackageJsons()
-  const packageJson = packageJsones.find((packageJson) => !packageJson.config.private) || packageJsones[0]
+  const packageJsonEntries = getPackageJsons(cwd)
+  const packageJson = packageJsonEntries.find((entry) => !entry.config.private) || packageJsonEntries[0]
   if (packageJson) {
     const { config } = packageJson
     try {
@@ -46,14 +73,20 @@ export interface PublishCommandOptions {
   preRelease?: boolean
   checkRemoteVersion?: boolean
   npmTag?: string
+  cwd?: string
 }
 
-export async function publish({ preRelease, checkRemoteVersion, npmTag }: PublishCommandOptions): Promise<void> {
+export async function publish({
+  preRelease,
+  checkRemoteVersion,
+  npmTag,
+  cwd = process.cwd(),
+}: PublishCommandOptions): Promise<void> {
   const s = spinner()
   s.start('Publishing all packages')
   const args = ['-r', 'publish', '--no-git-checks', '--access', 'public']
 
-  if (checkRemoteVersion && (await isSameVersion())) {
+  if (checkRemoteVersion && (await isSameVersion(undefined, cwd))) {
     logger.error('publishing automatically skipped.')
     return
   }
@@ -67,160 +100,135 @@ export async function publish({ preRelease, checkRemoteVersion, npmTag }: Publis
   try {
     const ret = await exec('pnpm', args, { throwOnError: true })
     s.stop('Publish all packages successfully')
-    ret.stdout && logger.log(ret.stdout)
-  } catch (error: any) {
+    logStdout(ret)
+  } catch (error: unknown) {
     s.cancel('Publish all packages failed')
-    throw error?.output?.stderr ?? error
+    throw (error as any)?.output?.stderr ?? error
   }
 }
 
 async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
   const s = spinner()
   s.start('Pushing to remote git repository')
-  await exec('git', ['add', '.'], {
-    throwOnError: true,
-  })
-  await exec('git', ['commit', '-m', `v${version}`], {
-    throwOnError: true,
-  })
+  await execGit('add', '.')
+  await execGit('commit', '-m', `v${version}`)
 
   if (!skipGitTag) {
-    await exec('git', ['tag', `v${version}`], {
-      throwOnError: true,
-    })
-    await exec('git', ['push', remote, `v${version}`], {
-      throwOnError: true,
-    })
+    await execGit('tag', `v${version}`)
+    await execGit('push', remote, `v${version}`)
   }
 
-  const ret = await exec('git', ['push'], {
-    throwOnError: true,
-  })
+  const ret = await execGit('push')
   s.stop('Push remote repository successfully')
-  ret.stdout && logger.log(ret.stdout)
+  logStdout(ret)
 }
 
-export function getPackageJsons(): {
-  filePath: string
-  config: {
-    name: string
-    version: string
-    private: boolean
-  }
-}[] {
-  const packageJsons = [resolve(cwd(), 'package.json')]
-  const packagesDir = resolve(cwd(), 'packages')
+export function getPackageJsons(cwd: string = process.cwd()): PackageJsonEntry[] {
+  const packageJsonPaths = [resolve(cwd, 'package.json')]
+  const packagesDir = resolve(cwd, 'packages')
   if (existsSync(packagesDir)) {
     for (const name of readdirSync(packagesDir)) {
       const pkgPath = resolve(packagesDir, name, 'package.json')
       if (existsSync(pkgPath)) {
-        packageJsons.push(pkgPath)
+        packageJsonPaths.push(pkgPath)
       }
     }
   }
 
-  return packageJsons.map((path) => {
-    return {
-      filePath: path,
-      config: readJSONSync<{
-        name: string
-        version: string
-        private: boolean
-      }>(path),
-    }
-  })
+  return packageJsonPaths.map((path) => ({
+    filePath: path,
+    config: readJSONSync<PackageJsonConfig>(path),
+  }))
 }
 
-export function updateVersion(version: string): void {
-  const packageJsons = getPackageJsons()
-
-  packageJsons.forEach(({ config, filePath }) => {
+export function updateVersion(version: string, cwd: string = process.cwd()): void {
+  for (const { config, filePath } of getPackageJsons(cwd)) {
     config.version = version
     writeFileSync(filePath, JSON.stringify(config, null, 2))
-  })
+  }
 }
 
 async function confirmRegistry() {
   const registry = (await exec('npm', ['config', 'get', 'registry'])).stdout
-  const ret = await confirm({
-    message: `Current registry is: ${registry}`,
-  })
-
-  if (isCancel(ret)) {
-    cancel('Operation cancelled.')
-    process.exit(0)
-  }
-
-  return ret
+  return unwrapPromptResult(
+    await confirm({
+      message: `Current registry is: ${registry}`,
+    }),
+  )
 }
 
 async function confirmVersion(currentVersion: string, expectVersion: string) {
-  const ret = await select({
-    message: 'Version confirm',
-    options: [`All packages version ${currentVersion} -> ${expectVersion}`, BACK_HINT].map((value) => ({
-      label: value,
-      value,
-    })),
-  })
-
-  if (isCancel(ret)) {
-    cancel('Operation cancelled.')
-    process.exit(0)
-  }
-
-  return ret
+  return unwrapPromptResult(
+    await select({
+      message: 'Version confirm',
+      options: [
+        { label: `All packages version ${currentVersion} -> ${expectVersion}`, value: 'confirm' as const },
+        { label: 'Back to previous step', value: BACK_VALUE },
+      ],
+    }),
+  )
 }
 
 async function confirmRefs(remote = 'origin') {
   const { stdout } = await exec('git', ['remote', '-v'])
-  const reg = new RegExp(`${remote}\t(.*) \\(push`)
+  const reg = new RegExp(`${remote}\\t(.*) \\(push\\)`)
+
   const repo = stdout.match(reg)?.[1]
   const { stdout: branch } = await exec('git', ['branch', '--show-current'])
 
-  const ret = await confirm({
-    message: `Current refs ${repo}:refs/for/${styleText('blue', branch)}`,
-  })
-
-  if (isCancel(ret)) {
-    cancel('Operation cancelled.')
-    process.exit(0)
-  }
-
-  return ret
+  return unwrapPromptResult(
+    await confirm({
+      message: `Current refs ${repo}:refs/for/${styleText('blue', branch)}`,
+    }),
+  )
 }
 
-async function getReleaseType() {
-  const releaseType = await select({
-    message: 'Please select release type',
-    options: releaseTypes.map((type) => ({ label: type, value: type })),
-  })
-
-  if (isCancel(releaseType)) {
-    cancel('Operation cancelled.')
-    process.exit(0)
+function computeExpectVersion(currentVersion: string, type: ReleaseType): string {
+  const incremented = semver.inc(currentVersion, type, `alpha.${Date.now()}`)
+  if (!incremented) {
+    throw new Error(`Failed to increment version ${currentVersion} with type ${type}`)
   }
-
-  return releaseType as ReleaseType
+  return type.startsWith('pre') ? incremented.slice(0, -2) : incremented
 }
+
+async function getReleaseType(currentVersion: string) {
+  return unwrapPromptResult(
+    await select({
+      message: 'Please select release type',
+      options: RELEASE_TYPES.map((type) => {
+        const expectVersion = computeExpectVersion(currentVersion, type as ReleaseType)
+        return { label: `${type} (${currentVersion} → ${expectVersion})`, value: type }
+      }),
+    }),
+  ) as ReleaseType
+}
+
 async function getReleaseVersion(currentVersion: string) {
-  let isPreRelease = false
-  let expectVersion = ''
-  let confirmVersionRet = ''
-  do {
-    const type = await getReleaseType()
-    isPreRelease = type.startsWith('pre')
-    expectVersion = semver.inc(currentVersion, type, `alpha.${Date.now()}`) as string
-    expectVersion = isPreRelease ? expectVersion.slice(0, -2) : expectVersion
+  while (true) {
+    const type = await getReleaseType(currentVersion)
+    const isPreRelease = type.startsWith('pre')
+    const expectVersion = computeExpectVersion(currentVersion, type)
 
-    confirmVersionRet = await confirmVersion(currentVersion, expectVersion)
-  } while (confirmVersionRet === BACK_HINT)
+    const confirmResult = await confirmVersion(currentVersion, expectVersion)
 
-  return { isPreRelease, expectVersion }
+    if (confirmResult !== BACK_VALUE) {
+      return { isPreRelease, expectVersion }
+    }
+  }
+}
+
+async function restorePackageJsons() {
+  try {
+    await execGit('restore', '**/package.json', 'package.json')
+  } catch {
+    /* empty */
+  }
 }
 
 export interface ReleaseCommandOptions {
   remote?: string
   npmTag?: string
+  cwd?: string
   skipNpmPublish?: boolean
   skipChangelog?: boolean
   skipGitTag?: boolean
@@ -229,8 +237,10 @@ export interface ReleaseCommandOptions {
 }
 
 export async function release(options: ReleaseCommandOptions): Promise<void> {
+  const cwd = options.cwd ?? process.cwd()
+
   try {
-    const currentVersion = readJSONSync<{ version: string }>(resolve(cwd(), 'package.json')).version
+    const currentVersion = readJSONSync<{ version: string }>(resolve(cwd, 'package.json')).version
 
     if (!currentVersion) {
       logger.error('Your package is missing the version field')
@@ -252,24 +262,24 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
 
     const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion)
 
-    if (options.checkRemoteVersion && (await isSameVersion(expectVersion))) {
+    if (options.checkRemoteVersion && (await isSameVersion(expectVersion, cwd))) {
       logger.error('Please check remote version.')
       return
     }
 
-    updateVersion(expectVersion)
+    updateVersion(expectVersion, cwd)
 
     if (options.task) {
       await options.task(expectVersion, currentVersion)
     }
 
     if (!options.skipNpmPublish) {
-      await publish({ preRelease: isPreRelease, npmTag: options.npmTag })
+      await publish({ preRelease: isPreRelease, npmTag: options.npmTag, cwd })
     }
 
     if (!isPreRelease) {
       if (!options.skipChangelog) {
-        await changelog({ cwd: cwd() })
+        await changelog({ cwd })
       }
       await pushGit(expectVersion, options.remote, options.skipGitTag)
     }
@@ -277,23 +287,9 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
     logger.success(`Release version ${expectVersion} successfully!`)
 
     if (isPreRelease) {
-      try {
-        await exec('git', ['restore', '**/package.json'], {
-          throwOnError: true,
-        })
-      } catch {
-        /* empty */
-      }
-
-      try {
-        await exec('git', ['restore', 'package.json'], {
-          throwOnError: true,
-        })
-      } catch {
-        /* empty */
-      }
+      await restorePackageJsons()
     }
-  } catch (error: any) {
+  } catch (error: unknown) {
     logger.error(error)
     process.exit(1)
   }
