@@ -1,45 +1,73 @@
 #!/usr/bin/env node
-import { Command } from 'commander'
+import { cli, command } from 'cleye'
 import pkg from '../package.json' with { type: 'json' }
 import { changelog, commitLint, publish, release } from './index.ts'
 
-const program = new Command()
-
-program.version(pkg.version)
-
-program
-  .command('release')
-  .option('-r --remote <remote>', 'Remote name')
-  .option('-s --skip-npm-publish', 'Skip npm publish')
-  .option('-sc --skip-changelog', 'Skip generate changelog')
-  .option('-sgt --skip-git-tag', 'Skip git tag')
-  .option('-nt --npm-tag <npmTag>', 'Npm tag')
-  .option('-c --check-remote-version', 'Check remote version')
-  .description('Release all packages and generate changelogs')
-  .action((options) => release(options))
-
-program
-  .command('publish')
-  .option('-c --check-remote-version', 'Check remote version')
-  .option('-nt --npm-tag <npmTag>', 'Npm tag')
-  .description('Publish to npm')
-  .action((options) => publish(options))
-
-program
-  .command('changelog')
-  .option('-rc --releaseCount <releaseCount>', 'Release count')
-  .option('-f --file <file>', 'Changelog filename')
-  .option('-p --preset <preset>', 'Changelog preset')
-  .description('Generate changelog')
-  .action((options) => changelog(options))
-
-program
-  .command('commit-lint')
-  .option('-p --commitMessagePath <path>', 'Git commit message path')
-  .option('-r --commitMessageRe <reg>', 'Validate the regular of whether the commit message passes')
-  .option('-e --errorMessage <message>', 'Validation failed to display error messages')
-  .option('-w --warningMessage <message>', 'Validation failed to display warning messages')
-  .description('Lint commit message')
-  .action((option) => commitLint(option))
-
-program.parse()
+cli({
+  name: 'vr',
+  version: pkg.version,
+  commands: [
+    command(
+      {
+        name: 'release',
+        flags: {
+          remote: { type: String, alias: 'r', description: 'Remote name' },
+          skipNpmPublish: { type: Boolean, alias: 's', description: 'Skip npm publish' },
+          skipChangelog: { type: Boolean, description: 'Skip generate changelog' },
+          skipGitTag: { type: Boolean, description: 'Skip git tag' },
+          npmTag: { type: String, alias: 't', description: 'Npm tag' },
+          checkRemoteVersion: { type: Boolean, alias: 'c', description: 'Check remote version' },
+        },
+        help: {
+          description: 'Release all packages and generate changelogs',
+        },
+      },
+      (argv) => release(argv.flags),
+    ),
+    command(
+      {
+        name: 'publish',
+        flags: {
+          checkRemoteVersion: { type: Boolean, alias: 'c', description: 'Check remote version' },
+          npmTag: { type: String, alias: 't', description: 'Npm tag' },
+        },
+        help: {
+          description: 'Publish to npm',
+        },
+      },
+      (argv) => publish(argv.flags),
+    ),
+    command(
+      {
+        name: 'changelog',
+        flags: {
+          releaseCount: { type: Number, alias: 'c', description: 'Release count' },
+          file: { type: String, alias: 'f', description: 'Changelog filename' },
+        },
+        help: {
+          description: 'Generate changelog',
+        },
+      },
+      (argv) => changelog(argv.flags),
+    ),
+    command(
+      {
+        name: 'commit-lint',
+        flags: {
+          commitMessagePath: { type: String, alias: 'p', default: '', description: 'Git commit message path' },
+          commitMessageRe: {
+            type: String,
+            alias: 'r',
+            description: 'Validate the regular of whether the commit message passes',
+          },
+          errorMessage: { type: String, alias: 'e', description: 'Validation failed to display error messages' },
+          warningMessage: { type: String, alias: 'w', description: 'Validation failed to display warning messages' },
+        },
+        help: {
+          description: 'Lint commit message',
+        },
+      },
+      (argv) => commitLint(argv.flags),
+    ),
+  ],
+})

@@ -58,7 +58,7 @@ describe('cli', () => {
   })
 
   it('supports short flags for release', async () => {
-    await runCli(['release', '-r', 'origin', '-s', '-sc', '-sgt', '-nt', 'next', '-c'])
+    await runCli(['release', '-r', 'origin', '-s', '--skip-changelog', '--skip-git-tag', '-t', 'next', '-c'])
 
     expect(indexMock.release).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -84,7 +84,7 @@ describe('cli', () => {
   })
 
   it('supports short flags for publish', async () => {
-    await runCli(['publish', '-c', '-nt', 'beta'])
+    await runCli(['publish', '-c', '-t', 'beta'])
 
     expect(indexMock.publish).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -95,25 +95,23 @@ describe('cli', () => {
   })
 
   it('runs changelog command with options', async () => {
-    await runCli(['changelog', '--releaseCount', '3', '--file', 'CHANGELOG.md', '--preset', 'angular'])
+    await runCli(['changelog', '--releaseCount', '3', '--file', 'CHANGELOG.md'])
 
     expect(indexMock.changelog).toHaveBeenCalledWith(
       expect.objectContaining({
-        releaseCount: '3',
+        releaseCount: 3,
         file: 'CHANGELOG.md',
-        preset: 'angular',
       }),
     )
   })
 
   it('supports short flags for changelog', async () => {
-    await runCli(['changelog', '-rc', '5', '-f', 'CHANGELOG.md', '-p', 'angular'])
+    await runCli(['changelog', '-c', '5', '-f', 'CHANGELOG.md'])
 
     expect(indexMock.changelog).toHaveBeenCalledWith(
       expect.objectContaining({
-        releaseCount: '5',
+        releaseCount: 5,
         file: 'CHANGELOG.md',
-        preset: 'angular',
       }),
     )
   })
