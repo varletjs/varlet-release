@@ -5,6 +5,7 @@ const indexMock = vi.hoisted(() => ({
   publish: vi.fn(),
   changelog: vi.fn(),
   commitLint: vi.fn(),
+  lockfileSyncCheck: vi.fn(),
 }))
 
 vi.mock('../src/index.js', () => indexMock)
@@ -26,6 +27,7 @@ describe('cli', () => {
     indexMock.publish.mockClear()
     indexMock.changelog.mockClear()
     indexMock.commitLint.mockClear()
+    indexMock.lockfileSyncCheck.mockClear()
   })
 
   afterEach(() => {
@@ -148,6 +150,28 @@ describe('cli', () => {
         commitMessageRe: '^feat',
         errorMessage: 'error',
         warningMessage: 'warn',
+      }),
+    )
+  })
+
+  it('runs lockfile-sync-check command with options', async () => {
+    await runCli(['lockfile-sync-check', '--packageManager', 'npm', '--install'])
+
+    expect(indexMock.lockfileSyncCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        packageManager: 'npm',
+        install: true,
+      }),
+    )
+  })
+
+  it('supports short flags for lockfile-sync-check', async () => {
+    await runCli(['lockfile-sync-check', '-m', 'yarn', '-i'])
+
+    expect(indexMock.lockfileSyncCheck).toHaveBeenCalledWith(
+      expect.objectContaining({
+        packageManager: 'yarn',
+        install: true,
       }),
     )
   })
