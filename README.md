@@ -46,9 +46,9 @@ When executing `vr release`, the following sequence of lifecycles occurs automat
 npx vr release
 
 # Specify remote name
-npx vr release -r https://github.com/varletjs/varlet-release
+npx vr release -r origin
 # or
-npx vr release --remote https://github.com/varletjs/varlet-release
+npx vr release --remote origin
 
 # Just generate changelogs
 npx vr changelog
@@ -59,10 +59,16 @@ npx vr changelog -f changelog.md
 npx vr changelog --file changelog.md
 
 # Lint commit message
-npx vr lint-commit -p .git/COMMIT_EDITMSG
+npx vr commit-lint -p .git/COMMIT_EDITMSG
 
 # Publish to npm, which can be called in the ci environment
 npx vr publish
+
+# Check if lockfile has been updated
+npx vr lockfile-sync-check
+
+# Auto install dependencies if lockfile changed
+npx vr lockfile-sync-check -i
 ```
 
 ### Git Hooks Integration (Best Practice)
@@ -72,7 +78,7 @@ It is highly recommended to use `commit-lint` with `simple-git-hooks` or `husky`
 ```json
 {
   "simple-git-hooks": {
-    "commit-msg": "npx vr lint-commit -p $1"
+    "commit-msg": "npx vr commit-lint -p $1"
   }
 }
 ```
@@ -81,38 +87,59 @@ It is highly recommended to use `commit-lint` with `simple-git-hooks` or `husky`
 
 #### release
 
-| Params                    | Instructions                                                                                                              | Default  |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------- | -------- |
-| -r --remote \<remote\>    | Specify remote name                                                                                                       | `origin` |
-| -s --skip-npm-publish     | Skip npm publish                                                                                                          | `false`  |
-| -c --check-remote-version | Check if the remote version of the npm package is the same as the one you want to publish locally, if so, stop execution. | `false`  |
-| -sc --skip-changelog      | Skip generate changelog                                                                                                   | `false`  |
-| -sgt --skip-git-tag       | Skip git tag                                                                                                              | `false`  |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                   | `-`      |
+```
+Usage: vr release [flags...]
 
-#### changelog
-
-| Params                              | Instructions               | Default        |
-| ----------------------------------- | -------------------------- | -------------- |
-| -f --file \<filename\>              | Specify changelog filename | `CHANGELOG.md` |
-| -rc --releaseCount \<releaseCount\> | Release count              | `0`            |
-| -p --preset \<preset\>              | Specify changelog preset   | `angular`      |
-
-#### lint-commit
-
-| Params                          | Instructions                                                                                                           |
-| ------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
-| -p --commitMessagePath \<path\> | The path of the temporary file to which the git message is submitted. The git hook commit-msg will pass this parameter |
-| -r --commitMessageRe \<reg\>    | Validate the regular of whether the commit message passes                                                              |
-| -e --errorMessage \<message\>   | Validation failed to display error messages                                                                            |
-| -w --warningMessage \<message\> | Validation failed to display warning messages                                                                          |
+Flags:
+  -r, --remote <string>             Remote name
+  -s, --skip-npm-publish            Skip npm publish
+      --skip-changelog              Skip generate changelog
+      --skip-git-tag                Skip git tag
+  -t, --npm-tag <string>            Npm tag
+  -c, --check-remote-version        Check remote version
+```
 
 #### publish
 
-| Params                    | Instructions                                                                                                                                     | Default |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------- |
-| -c --check-remote-version | Detects whether the remote version of the npm package is the same as the package version to be published locally, and if it is, skip the release | `false` |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                                                                                                          | `-`     |
+```
+Usage: vr publish [flags...]
+
+Flags:
+  -c, --check-remote-version        Check remote version
+  -t, --npm-tag <string>            Npm tag
+```
+
+#### changelog
+
+```
+Usage: vr changelog [flags...]
+
+Flags:
+  -c, --release-count <number>      Release count, default 0
+  -f, --file <string>               Changelog filename
+```
+
+#### commit-lint
+
+```
+Usage: vr commit-lint [flags...]
+
+Flags:
+  -p, --commit-message-path <string>  Git commit message path
+  -r, --commit-message-re <string>    Validate the regular of whether the commit message passes
+  -e, --error-message <string>        Validation failed to display error messages
+  -w, --warning-message <string>      Validation failed to display warning messages
+```
+
+#### lockfile-sync-check
+
+```
+Usage: vr lockfile-sync-check [flags...]
+
+Flags:
+  -m, --package-manager <string>    Package manager (npm, yarn, pnpm), default pnpm
+  -i, --install                     Auto install dependencies if lockfile changed
+```
 
 ### Node API Custom Handle
 

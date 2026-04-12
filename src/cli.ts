@@ -41,7 +41,7 @@ cli({
       {
         name: 'changelog',
         flags: {
-          releaseCount: { type: Number, alias: 'c', description: 'Release count' },
+          releaseCount: { type: Number, alias: 'c', default: 0, description: 'Release count, default 0' },
           file: { type: String, alias: 'f', description: 'Changelog filename' },
         },
         help: {

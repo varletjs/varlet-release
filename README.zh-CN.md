@@ -46,9 +46,9 @@ pnpm add @varlet/release -D
 npx vr release
 
 # 指定远程仓库名称
-npx vr release -r https://github.com/varletjs/varlet-release
+npx vr release -r origin
 # 或
-npx vr release --remote https://github.com/varletjs/varlet-release
+npx vr release --remote origin
 
 # 仅生成变更日志
 npx vr changelog
@@ -59,10 +59,16 @@ npx vr changelog -f changelog.md
 npx vr changelog --file changelog.md
 
 # 检测 commit message 是否符合规范
-npx vr lint-commit -p .git/COMMIT_EDITMSG
+npx vr commit-lint -p .git/COMMIT_EDITMSG
 
 # 发布到 npm（通常在 CI/CD 中执行）
 npx vr publish
+
+# 检查 lockfile 是否已更新
+npx vr lockfile-sync-check
+
+# 如果 lockfile 发生变化则自动安装依赖
+npx vr lockfile-sync-check -i
 ```
 
 ### Git Hooks 集成 (推荐最佳实践)
@@ -72,7 +78,7 @@ npx vr publish
 ```json
 {
   "simple-git-hooks": {
-    "commit-msg": "npx vr lint-commit -p $1"
+    "commit-msg": "npx vr commit-lint -p $1"
   }
 }
 ```
@@ -81,38 +87,59 @@ npx vr publish
 
 #### release
 
-| 参数                      | 说明                                                                    | 默认值   |
-| ------------------------- | ----------------------------------------------------------------------- | -------- |
-| -r --remote \<remote\>    | 指定远程仓库名称                                                        | `origin` |
-| -s --skip-npm-publish     | 跳过 npm 发布                                                           | `false`  |
-| -c --check-remote-version | 检测 npm 包的远程版本是否与要在本地发布的包版本相同，如果是，则停止执行 | `false`  |
-| -sc --skip-changelog      | 跳过生成变更日志                                                        | `false`  |
-| -sgt --skip-git-tag       | 跳过 git tag                                                            | `false`  |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                                 | `-`      |
+```
+用法: vr release [标志...]
 
-#### changelog
-
-| 参数                                | 说明               | 默认值         |
-| ----------------------------------- | ------------------ | -------------- |
-| -f --file \<filename\>              | 指定变更日志文件名 | `CHANGELOG.md` |
-| -rc --releaseCount \<releaseCount\> | 发布数量           | `0`            |
-| -p --preset \<preset\>              | 指定变更预设       | `angular`      |
-
-#### lint-commit
-
-| 参数                            | 说明                                                                        |
-| ------------------------------- | --------------------------------------------------------------------------- |
-| -p --commitMessagePath \<path\> | 提交 `git message` 的临时文件路径。`git` 钩子 `commit-msg` 会传递这个参数。 |
-| -r --commitMessageRe \<reg\>    | 验证 `commit message` 是否通过的正则                                        |
-| -e --errorMessage \<message\>   | 验证失败展示的错误信息                                                      |
-| -w --warningMessage \<message\> | 验证失败展示的提示信息                                                      |
+标志:
+  -r, --remote <string>             远程仓库名称
+  -s, --skip-npm-publish            跳过 npm 发布
+      --skip-changelog              跳过生成变更日志
+      --skip-git-tag                跳过 git tag
+  -t, --npm-tag <string>            npm tag
+  -c, --check-remote-version        检查远程版本
+```
 
 #### publish
 
-| 参数                      | 说明                                                                  | 默认值  |
-| ------------------------- | --------------------------------------------------------------------- | ------- |
-| -c --check-remote-version | 检测npm包的远程版本是否与要在本地发布的包版本相同，如果是，则跳过发布 | `false` |
-| -nt --npm-tag \<npmTag\>  | npm tag                                                               | `-`     |
+```
+用法: vr publish [标志...]
+
+标志:
+  -c, --check-remote-version        检查远程版本
+  -t, --npm-tag <string>            npm tag
+```
+
+#### changelog
+
+```
+用法: vr changelog [标志...]
+
+标志:
+  -c, --release-count <number>      发布数量，默认 0
+  -f, --file <string>               变更日志文件名
+```
+
+#### commit-lint
+
+```
+用法: vr commit-lint [标志...]
+
+标志:
+  -p, --commit-message-path <string>  Git commit message 路径
+  -r, --commit-message-re <string>    验证 commit message 是否通过的正则表达式
+  -e, --error-message <string>        验证失败时显示的错误信息
+  -w, --warning-message <string>      验证失败时显示的警告信息
+```
+
+#### lockfile-sync-check
+
+```
+用法: vr lockfile-sync-check [标志...]
+
+标志:
+  -m, --package-manager <string>    包管理器 (npm, yarn, pnpm)，默认 pnpm
+  -i, --install                     如果 lockfile 发生变化则自动安装依赖
+```
 
 ### Node API 自定义处理
 
