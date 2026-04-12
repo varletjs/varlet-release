@@ -1,4 +1,4 @@
-# [2.0.0](https://github.com/varletjs/release/compare/v1.2.0...v2.0.0) (2026-04-12)
+## [2.0.1](https://github.com/varletjs/release/compare/v2.0.0...v2.0.1) (2026-04-12)
 
 
 ### BREAKING CHANGES
@@ -102,6 +102,7 @@
 * release process for  error handling ([93bd80a](https://github.com/varletjs/release/commit/93bd80ab6cc69cc5254b8c64587b18df3e84d643))
 * **release:** Better display of log information ([4054a7e](https://github.com/varletjs/release/commit/4054a7e2388ec863c61ee9a4136d50bb78398704))
 * **release:** improve code organization and type safety ([421d9e5](https://github.com/varletjs/release/commit/421d9e5ad7fade2824b9e9374826d8e913db1fcb))
+* **release:** make execGit function async ([1792cd9](https://github.com/varletjs/release/commit/1792cd9646e0de20ae2ce5366316deebf2637b21))
 * remove unused `glob` dependency ([7a508c8](https://github.com/varletjs/release/commit/7a508c8e7c9abf33f6d72165cddde5fb3630b2b0))
 * remove unused title function ([#24](undefined/undefined/release/issues/24)) ([ac37481](https://github.com/varletjs/release/commit/ac37481d8257585d73fa14deb2b131a960059007))
 * remove useless characters ([3e0285b](https://github.com/varletjs/release/commit/3e0285b4eb70ddcd6afe201b8f8437c98c297994))
