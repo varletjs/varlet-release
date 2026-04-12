@@ -42,18 +42,18 @@
   "dependencies": {
     "@clack/prompts": "^1.2.0",
     "commander": "^11.1.0",
-    "conventional-changelog": "^5.1.0",
+    "conventional-changelog": "^7.2.0",
     "rslog": "^2.1.1",
     "semver": "^7.7.4",
     "tinyexec": "^1.1.1"
   },
   "devDependencies": {
     "@configurajs/vite-plus": "^0.2.2",
-    "@types/conventional-changelog": "^3.1.5",
     "@types/node": "^22.14.0",
     "@types/semver": "^7.7.1",
     "@typescript/native-preview": "7.0.0-dev.20260410.1",
     "@vitest/coverage-v8": "^4.1.4",
+    "conventional-changelog-angular": "^8.3.1",
     "vite-plus": "catalog:"
   },
   "engines": {

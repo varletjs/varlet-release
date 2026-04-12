@@ -1,0 +1,39 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`changelog > should generate changelog and match snapshot 1`] = `
+"# 1.0.0 (YYYY-MM-DD)
+
+
+### BREAKING CHANGES
+
+* API changed ([67b2e3c](undefined/undefined/release/commit/67b2e3c87ace8a8dca5d18d3a49c31e3e0d8cd03))
+* breaking change new API ([0b20d03](undefined/undefined/release/commit/0b20d03f0e8edc5c0b02a4d2895a875b73857d05))
+
+
+### Bug Fixes
+
+* another fix ([67b2e3c](https://github.com/varletjs/release/commit/67b2e3c87ace8a8dca5d18d3a49c31e3e0d8cd03))
+* handle error ([2606dda](https://github.com/varletjs/release/commit/2606ddaf0078c8f612d53f64697c0702c17070e5))
+
+
+### Features
+
+* add test feature ([a2d538d](https://github.com/varletjs/release/commit/a2d538d90599db5dd754c25d3eb38187ff7a643e)), closes [#1](https://github.com/varletjs/release/issues/1)
+* breaking change new API ([0b20d03](https://github.com/varletjs/release/commit/0b20d03f0e8edc5c0b02a4d2895a875b73857d05))
+
+
+### Performance Improvements
+
+* improve speed ([135ad65](https://github.com/varletjs/release/commit/135ad657f0defbc511aa2663fc6842df68584cff))
+
+
+### Refactoring
+
+* clean codebase ([9bc52d6](https://github.com/varletjs/release/commit/9bc52d6215eddaae0f4bba3c2d1f55537128aac9))
+
+
+### Reverts
+
+* revert feat ([0c674a0](https://github.com/varletjs/release/commit/0c674a0f26d684f25d125c5d2b3170bc05f41127))
+"
+`;

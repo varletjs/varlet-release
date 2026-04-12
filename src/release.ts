@@ -269,7 +269,7 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
 
     if (!isPreRelease) {
       if (!options.skipChangelog) {
-        await changelog()
+        await changelog({ cwd: cwd() })
       }
       await pushGit(expectVersion, options.remote, options.skipGitTag)
     }

@@ -1,7 +1,8 @@
 import { createWriteStream } from 'node:fs'
 import { resolve as resolvePath } from 'node:path'
 import { spinner } from '@clack/prompts'
-import conventionalChangelog from 'conventional-changelog'
+import { ConventionalChangelog } from 'conventional-changelog'
+import type { Commit, Params } from 'conventional-changelog'
 import { COMMIT_HEADER_RE } from './commitLint.ts'
 
 const COMMIT_TYPE_MAP: Record<string, string> = {
@@ -9,7 +10,7 @@ const COMMIT_TYPE_MAP: Record<string, string> = {
   fix: 'Bug Fixes',
   perf: 'Performance Improvements',
   revert: 'Reverts',
-  refactor: 'Code Refactoring',
+  refactor: 'Refactoring',
   docs: 'Documentation',
   style: 'Styles',
   test: 'Tests',
@@ -36,7 +37,12 @@ const MAIN_TEMPLATE = `{{> header}}
 
 {{/each}}
 `
-type Context = NonNullable<Parameters<typeof conventionalChangelog>['2']>
+interface Context {
+  host?: string
+  owner?: string
+  repository?: string
+  repoUrl?: string
+}
 
 function linkify(text: string, context: Context, issues: string[]): string {
   let result = text
@@ -96,16 +102,34 @@ function tryParseHeader(commit: any): { type: string; scope?: string; subject?: 
 function processBreakingChanges(commit: any, context: Context, issues: string[]): boolean {
   let discard = true
 
-  commit.notes.forEach((note: any) => {
-    note.title = 'BREAKING CHANGES'
-    discard = false
-  })
+  const getCommitHashLink = () => {
+    if (!commit.hash) {
+      return ''
+    }
+    const shortHash = commit.hash.substring(0, 7)
+    const repoUrl = context.repository ? `${context.host}/${context.owner}/${context.repository}` : context.repoUrl
+    return repoUrl ? ` ([${shortHash}](${repoUrl}/commit/${commit.hash}))` : ` (${shortHash})`
+  }
 
-  const hadBreakingNotes = commit.notes.length > 0
+  const hashLink = getCommitHashLink()
+
+  if (commit.notes && commit.notes.length > 0) {
+    discard = false
+    commit.notes = commit.notes.map((note: any) => ({
+      ...note,
+      title: note.title === 'BREAKING CHANGE' ? 'BREAKING CHANGES' : note.title,
+      text: commit.hash && note.text.includes(commit.hash.substring(0, 7)) ? note.text : note.text + hashLink,
+    }))
+  }
+
+  const hadBreakingNotes = commit.notes && commit.notes.length > 0
 
   const addBreakingNote = () => {
     if (!hadBreakingNotes) {
-      const text = linkify(extractBreakingText(commit), context, issues)
+      const text = linkify(extractBreakingText(commit), context, issues) + hashLink
+      if (!commit.notes) {
+        commit.notes = []
+      }
       commit.notes.push({ title: 'BREAKING CHANGES', text })
     }
     discard = false
@@ -153,63 +177,80 @@ function mapCommitType(commit: any, discard: boolean): boolean {
 }
 
 export interface ChangelogCommandOptions {
+  cwd?: string
   file?: string
   releaseCount?: number
-  preset?:
-    | 'angular'
-    | 'atom'
-    | 'codemirror'
-    | 'conventionalcommits'
-    | 'ember'
-    | 'eslint'
-    | 'express'
-    | 'jquery'
-    | 'jshint'
-  writerOpts?: Parameters<typeof conventionalChangelog>['4']
+  mainTemplate?: string
+  transformCommit?: (commit: Commit, params: Params) => Partial<Commit> | Promise<Partial<Commit> | null> | null
 }
 
-function createDefaultWriterOpts(): ChangelogCommandOptions['writerOpts'] {
-  return {
-    mainTemplate: MAIN_TEMPLATE,
+function createDefaultTransformCommit(): ChangelogCommandOptions['transformCommit'] {
+  return (commit, params) => {
+    const context: Context = {
+      host: params.context?.host,
+      owner: params.context?.owner,
+      repository:
+        typeof params.repository === 'object' && params.repository !== null ? params.repository.project : undefined,
+      repoUrl: params.context?.repoUrl,
+    }
+    const issues: string[] = []
 
-    transform(commit, context) {
-      const issues: string[] = []
+    // Create a mutable copy of the commit
+    const mutableCommit = { ...commit }
+    if (mutableCommit.notes) {
+      mutableCommit.notes = [...mutableCommit.notes]
+    }
 
-      const discard = processBreakingChanges(commit, context, issues)
+    const discard = processBreakingChanges(mutableCommit, context, issues)
 
-      if (!mapCommitType(commit, discard)) {
-        return false
-      }
+    if (!mapCommitType(mutableCommit, discard)) {
+      return null
+    }
 
-      if (commit.scope === '*') {
-        commit.scope = ''
-      }
-      if (typeof commit.hash === 'string') {
-        commit.shortHash = commit.hash.substring(0, 7)
-      }
-      if (typeof commit.subject === 'string') {
-        commit.subject = linkify(commit.subject, context, issues)
-      }
+    if (mutableCommit.scope === '*') {
+      mutableCommit.scope = ''
+    }
+    if (typeof mutableCommit.hash === 'string') {
+      mutableCommit.shortHash = mutableCommit.hash.substring(0, 7)
+    }
+    if (typeof mutableCommit.subject === 'string') {
+      mutableCommit.subject = linkify(mutableCommit.subject, context, issues)
+    }
 
-      commit.references = commit.references.filter((ref) => !issues.includes(ref.issue))
+    if (mutableCommit.references) {
+      mutableCommit.references = mutableCommit.references.filter((ref: any) => !issues.includes(ref.issue))
+    }
 
-      return commit
-    },
+    return mutableCommit
   }
 }
 
 export function changelog({
+  cwd = process.cwd(),
   releaseCount = 0,
   file = 'CHANGELOG.md',
-  preset = 'angular',
-  writerOpts = createDefaultWriterOpts(),
+  mainTemplate = MAIN_TEMPLATE,
+  transformCommit = createDefaultTransformCommit(),
 }: ChangelogCommandOptions = {}): Promise<void> {
   const s = spinner()
   s.start('Generating changelog')
 
   return new Promise((resolve) => {
-    conventionalChangelog({ preset, releaseCount }, undefined, undefined, undefined, writerOpts)
-      .pipe(createWriteStream(resolvePath(process.cwd(), file)))
+    const generator = new ConventionalChangelog(cwd)
+      .readPackage()
+      .loadPreset('angular')
+      .options({
+        releaseCount,
+        transformCommit,
+      })
+      .writer({
+        mainTemplate,
+        transform: (commit) => commit,
+      })
+
+    generator
+      .writeStream()
+      .pipe(createWriteStream(resolvePath(cwd, file)))
       .on('close', () => {
         s.stop('Changelog generated successfully!')
         resolve()
