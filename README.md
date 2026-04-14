@@ -28,52 +28,225 @@ pnpm add @varlet/release -D
 
 ## Usage
 
-### Core Workflow
+### Features Overview
 
-When executing `vr release`, the following sequence of lifecycles occurs automatically:
+- [release](#release) - Automatically complete the standard workflow from version modification to publishing and creating git tags.
+- [publish](#publish) - Execute the npm publish process independently, usually suitable for CI/CD environments.
+- [changelog](#changelog) - Automatically generate formatted changelogs based on Git Commit conventions.
+- [commit-lint](#commit-lint) - Validate whether the Git Commit Message adheres to specifications, helping teams unify commit formats.
+- [lockfile-check](#lockfile-check) - Check the status of the project's lockfile and provide dependency update mechanisms when changes occur.
 
-1. Select/Confirm the **version** to publish interactively
-2. Execute the user-defined `task` function (optional, e.g., to rebuild projects based on the new version)
-3. Update the `package.json` **version** programmatically
-4. Generate the **Changelog**
-5. **Git Commit** & **Git Tag**
-6. **Publish** to npm
+---
 
-### Using Command
+### release
 
-```shell
-# Release all packages and run the full workflow
-npx vr release
+**Description**: The core functional collection for package release, integrating all release preparation and subsequent operations.
 
-# Specify remote name
-npx vr release -r origin
-# or
-npx vr release --remote origin
+**Use cases**: Used when a new version needs to be released and all workspace changes have been committed. It guides through the publication via an intuitive command-line interaction.
 
-# Just generate changelogs
-npx vr changelog
+**Core Workflow**:
 
-# Specify changelog filename
-npx vr changelog -f changelog.md
-# or
-npx vr changelog --file changelog.md
+1. Interactively prompt and confirm the new version number (automatically calculate patch, minor, major upgrades).
+2. Execute the user-customized `task` function (e.g., modifying files, bundling assets).
+3. Automatically update the version number in the project's `package.json`.
+4. Generate the `Changelog` for the corresponding version.
+5. Automatically complete the Git commit and create a new version Tag.
+6. Publish the updated packages to npm.
 
-# Lint commit message
-npx vr commit-lint -p .git/COMMIT_EDITMSG
+**CLI Commands**:
 
-# Publish to npm, which can be called in the ci environment
-npx vr publish
+_Flags Reference_:
 
-# Check if lockfile has been updated
-npx vr lockfile-sync-check
+```text
+Usage: vr release [flags...]
 
-# Auto install dependencies if lockfile changed
-npx vr lockfile-sync-check -i
+Flags:
+  -r, --remote <string>             Remote repository name
+  -s, --skip-npm-publish            Skip npm publish
+      --skip-changelog              Skip generating changelog
+      --skip-git-tag                Skip git tag
+  -t, --npm-tag <string>            npm tag
+  -c, --check-remote-version        Check remote version
 ```
 
-### Git Hooks Integration (Best Practice)
+_Example_:
 
-It is highly recommended to use `commit-lint` with `simple-git-hooks` or `husky` in `package.json` to automatically check developers' commit messages before committing:
+```shell
+# Release all packages and execute the full workflow
+npx vr release
+
+# Specify remote repository name (default origin)
+npx vr release -r origin
+
+# Skip npm publishing
+npx vr release -s
+# Skip generating changelog
+npx vr release --skip-changelog
+# Check remote version, interrupt execution if the identical version already exists
+npx vr release -c
+```
+
+**Node API**:
+
+```typescript
+import { release } from '@varlet/release'
+
+release({
+  remote?: string              // Remote repository name, defaults to 'origin'
+  npmTag?: string              // NPM tag to publish, such as 'next', 'alpha'
+  cwd?: string                 // Working directory, defaults to process.cwd()
+  skipNpmPublish?: boolean     // Whether to skip the npm publish process
+  skipChangelog?: boolean      // Whether to skip changelog generation
+  skipGitTag?: boolean         // Whether to skip git tag creation
+  checkRemoteVersion?: boolean // Whether to check remote version to avoid conflicts
+  task?(newVersion: string, oldVersion: string): Promise<void> // Custom task executed during the release
+})
+```
+
+_Example: Add custom handling logic_
+
+```javascript
+import { release } from '@varlet/release'
+
+async function task(newVersion, oldVersion) {
+  // Execute building or file writing operations here
+  await doBuild()
+}
+
+release({ task })
+```
+
+---
+
+### publish
+
+**Description**: Publish the package independently to the npm registry.
+
+**Use cases**: Applicable in scenarios where manual version selection, changelog generation, or git tags are not needed, often used in CI/CD pipelines to trigger automated publication based on specific processes.
+
+**Core Workflow**: Read the version number from the current package.json and run the corresponding publish process.
+
+**CLI Commands**:
+
+_Flags Reference_:
+
+```text
+Usage: vr publish [flags...]
+
+Flags:
+  -c, --check-remote-version        Check remote version
+  -t, --npm-tag <string>            npm tag
+```
+
+_Example_:
+
+```shell
+# Publish directly to npm
+npx vr publish
+
+# Check if the same version already exists due to network or other reasons, and abort if so
+npx vr publish -c
+# Specify the npm dist-tag
+npx vr publish -t alpha
+```
+
+**Node API**:
+
+```typescript
+import { publish } from '@varlet/release'
+
+publish({
+  preRelease?: boolean         // Pre-release indicator, will add the '--tag alpha' option
+  checkRemoteVersion?: boolean // Check if the same version exists on the remote npm before publishing
+  npmTag?: string              // NPM tag to publish
+  cwd?: string                 // Working directory, defaults to process.cwd()
+})
+```
+
+---
+
+### changelog
+
+**Description**: Automatically generate Markdown-formatted changelogs based on standard Commit history.
+
+**Use cases**: Useful for updating the `CHANGELOG.md` file independently without triggering the full release process.
+
+**Core Workflow**: Traverse the Git commit history and format the output classified by predefined conventional commit rules (e.g., feat, fix).
+
+**CLI Commands**:
+
+_Flags Reference_:
+
+```text
+Usage: vr changelog [flags...]
+
+Flags:
+  -c, --release-count <number>      Release count, default 0
+  -f, --file <string>               Changelog filename
+```
+
+_Example_:
+
+```shell
+# Generate changelogs for all history and output as CHANGELOG.md in the current directory
+npx vr changelog
+
+# Specify the generated changelog filename
+npx vr changelog -f my-changelog.md
+# Limit the range of release versions to generate changelogs for (0 means all)
+npx vr changelog -c 0
+```
+
+**Node API**:
+
+```typescript
+import { changelog } from '@varlet/release'
+
+changelog({
+  cwd?: string                 // Working directory, defaults to process.cwd()
+  releaseCount?: number        // Number of recent releases to include in the log, defaults to 0 (all)
+  file?: string                // Output changelog filename, defaults to 'CHANGELOG.md'
+  showTypes?: string[]         // Commit types to display, defaults to ['feat', 'fix', 'perf', 'revert', 'refactor']
+  outputUnreleased?: boolean   // Whether to output unreleased changes
+  writerOpt?: object           // Specific configuration for conventional-changelog-writer
+})
+```
+
+---
+
+### commit-lint
+
+**Description**: Validate Git commit message formats.
+
+**Use cases**: Used in combination with `git hooks` to enforce high-quality commit descriptions, ensuring the quality of the changelog.
+
+**Core Workflow**: Read the commit file. If it matches the configured regex, the process continues; otherwise, it prints specific failure messages and aborts the commit.
+
+**CLI Commands**:
+
+_Flags Reference_:
+
+```text
+Usage: vr commit-lint [flags...]
+
+Flags:
+  -p, --commit-message-path <string>  Git commit message path
+  -r, --commit-message-re <string>    Validate the regex for commit message
+  -e, --error-message <string>        Error message displayed on validation failure
+  -w, --warning-message <string>      Warning message displayed on validation failure
+```
+
+_Example_:
+
+```shell
+# Check if the commit message at the given path is standard
+npx vr commit-lint -p .git/COMMIT_EDITMSG
+
+# Customize regex validation and prompt message
+npx vr commit-lint -p .git/COMMIT_EDITMSG -r "^feat: .*" -e "Commit validation failed"
+```
+
+_It is recommended to integrate with `simple-git-hooks` or `husky` in `package.json`:_
 
 ```json
 {
@@ -83,88 +256,73 @@ It is highly recommended to use `commit-lint` with `simple-git-hooks` or `husky`
 }
 ```
 
-### Configuration
+**Node API**:
 
-#### release
+```typescript
+import { commitLint } from '@varlet/release'
 
-```
-Usage: vr release [flags...]
-
-Flags:
-  -r, --remote <string>             Remote name
-  -s, --skip-npm-publish            Skip npm publish
-      --skip-changelog              Skip generate changelog
-      --skip-git-tag                Skip git tag
-  -t, --npm-tag <string>            Npm tag
-  -c, --check-remote-version        Check remote version
+commitLint({
+  commitMessagePath: string            // Required: Path to Git commit message file
+  commitMessageRe?: string | RegExp    // Regex to validate the commit message format
+  errorMessage?: string                // Error message printed upon failure
+  warningMessage?: string              // Supplemental warning information printed upon failure
+})
 ```
 
-#### publish
+---
 
-```
-Usage: vr publish [flags...]
+### lockfile-check
 
-Flags:
-  -c, --check-remote-version        Check remote version
-  -t, --npm-tag <string>            Npm tag
-```
+**Description**: Detect and visually output in the console whether the lockfile of frontend dependencies has been modified.
 
-#### changelog
+**Use cases**: Recommended to use after Git operations such as pulling updates (`git pull`), switching branches (`git checkout`), or merging code. It helps detect if upstream dependency lockfiles (like `pnpm-lock.yaml`) have changed. If a change is detected, you can invoke a package manager's installation command through specific options to synchronize the local environment with upstream instantly, preventing obscure bugs caused by outdated dependencies.
 
-```
-Usage: vr changelog [flags...]
+**Core Workflow**: Execute a Git diff comparing the project's lockfile (e.g. `pnpm-lock.yaml` or corresponding environment lockfile) from the original HEAD. Print its modification status in the console. Furthermore, trigger the package manager to reinstall dependencies to sync with upstream if directed by the command options.
 
-Flags:
-  -c, --release-count <number>      Release count, default 0
-  -f, --file <string>               Changelog filename
-```
+**CLI Commands**:
 
-#### commit-lint
+_Flags Reference_:
 
-```
-Usage: vr commit-lint [flags...]
-
-Flags:
-  -p, --commit-message-path <string>  Git commit message path
-  -r, --commit-message-re <string>    Validate the regular of whether the commit message passes
-  -e, --error-message <string>        Validation failed to display error messages
-  -w, --warning-message <string>      Validation failed to display warning messages
-```
-
-#### lockfile-sync-check
-
-```
-Usage: vr lockfile-sync-check [flags...]
+```text
+Usage: vr lockfile-check [flags...]
 
 Flags:
   -m, --package-manager <string>    Package manager (npm, yarn, pnpm), default pnpm
   -i, --install                     Auto install dependencies if lockfile changed
 ```
 
-### Node API Custom Handle
+_Example_:
 
-You can write your own release scripts with Internal Node.js API instead of CLI.
+```shell
+# Check the synchronization status of the current lockfile
+npx vr lockfile-check
 
-#### Example
+# Check current status, forcefully run installation to sync dependencies if updates exist
+npx vr lockfile-check -i
 
-```js
-import { changelog, release } from '@varlet/release'
-
-// Run the core release workflow directly
-release()
+# Specify other package managers for checking (defaults to pnpm)
+npx vr lockfile-check -m npm
 ```
 
-You can pass in a custom `task` function that will be called after the package version is updated but before the remaining publish steps.
+_It is also recommended to integrate with `simple-git-hooks` or `husky` in `package.json` (e.g. trigger checks and installations automatically during the `post-merge` or `post-checkout` hooks):_
 
-```js
-import { changelog, release } from '@varlet/release'
-
-async function task(newVersion, oldVersion) {
-  await doSomething1()
-  await doSomething2()
+```json
+{
+  "simple-git-hooks": {
+    "post-merge": "npx vr lockfile-check -i"
+  }
 }
+```
 
-release({ task })
+**Node API**:
+
+```typescript
+import { lockfileCheck } from '@varlet/release'
+
+lockfileCheck({
+  packageManager?: 'npm' | 'yarn' | 'pnpm' // Choose package manager, defaults to 'pnpm'
+  install?: boolean                        // Whether to automatically run install if lockfile is out of sync
+})
 ```
 
 ## License
