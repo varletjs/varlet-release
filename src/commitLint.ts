@@ -37,9 +37,7 @@ Allowed types:
 - revert
 - merge
 - wip
-
-Commit message reference: https://docs.google.com/document/d/1QrDFcIiPjSLDn3EL15IJygNPiHORgU1_OOAqWjiDU5Y
-参考阮一峰Commit message编写指南: https://www.ruanyifeng.com/blog/2016/01/commit_message_change_log.html`
+`
 
 export function isVersionCommitMessage(message: string): boolean {
   return Boolean(message.startsWith('v') && semver.valid(message.slice(1)))
