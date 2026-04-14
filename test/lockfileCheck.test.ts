@@ -131,22 +131,40 @@ describe('lockfileCheck', () => {
       await expect(lockfileCheck({ packageManager: 'yarn' })).resolves.toBeUndefined()
     })
 
-    it('should install dependencies when install flag is true and lockfile updated', async () => {
+    it('should install dependencies by default when lockfile updated', async () => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec)
         .mockResolvedValueOnce({ stdout: 'pnpm-lock.yaml\n' } as any)
         .mockResolvedValueOnce(undefined as any)
 
-      await lockfileCheck({ install: true })
+      await lockfileCheck()
 
       expect(mockExec).toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
+    })
+
+    it('should not install when skipInstall flag is true and lockfile updated', async () => {
+      const { x: mockExec } = await import('tinyexec')
+      vi.mocked(mockExec).mockResolvedValue({ stdout: 'pnpm-lock.yaml\n' } as any)
+
+      const loggerMock = await import('rslog')
+      const mockWarn = vi.spyOn(loggerMock.logger, 'warn')
+
+      const lockfileModule = await import('../src/lockfileCheck')
+      const spyInstall = vi.spyOn(lockfileModule, 'installDependencies')
+
+      await lockfileCheck({ skipInstall: true })
+
+      expect(mockExec).toHaveBeenCalledWith('git', ['diff', '--name-only', 'ORIG_HEAD', 'HEAD'], { throwOnError: true })
+      expect(mockExec).not.toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
+      expect(spyInstall).not.toHaveBeenCalled()
+      expect(mockWarn).toHaveBeenCalledWith('Lockfile has been updated!')
     })
 
     it('should not install when lockfile is not updated', async () => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue({ stdout: 'test.txt\n' } as any)
 
-      await lockfileCheck({ install: true })
+      await lockfileCheck()
 
       expect(mockExec).toHaveBeenCalledWith('git', ['diff', '--name-only', 'ORIG_HEAD', 'HEAD'], { throwOnError: true })
       expect(mockExec).not.toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
@@ -161,7 +179,7 @@ describe('lockfileCheck', () => {
       const loggerMock = await import('rslog')
       const mockError = vi.spyOn(loggerMock.logger, 'error')
 
-      await expect(lockfileCheck({ install: true })).resolves.toBeUndefined()
+      await expect(lockfileCheck()).resolves.toBeUndefined()
       expect(mockError).toHaveBeenCalledWith('Error checking lockfile sync:', expect.any(Error))
     })
   })

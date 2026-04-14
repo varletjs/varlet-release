@@ -155,23 +155,23 @@ describe('cli', () => {
   })
 
   it('runs lockfile-check command with options', async () => {
-    await runCli(['lockfile-check', '--packageManager', 'npm', '--install'])
+    await runCli(['lockfile-check', '--packageManager', 'npm', '--skip-install'])
 
     expect(indexMock.lockfileCheck).toHaveBeenCalledWith(
       expect.objectContaining({
         packageManager: 'npm',
-        install: true,
+        skipInstall: true,
       }),
     )
   })
 
   it('supports short flags for lockfile-check', async () => {
-    await runCli(['lockfile-check', '-m', 'yarn', '-i'])
+    await runCli(['lockfile-check', '-m', 'yarn', '-s'])
 
     expect(indexMock.lockfileCheck).toHaveBeenCalledWith(
       expect.objectContaining({
         packageManager: 'yarn',
-        install: true,
+        skipInstall: true,
       }),
     )
   })

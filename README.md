@@ -297,11 +297,11 @@ commitLint({
 
 ### lockfile-check
 
-**Description**: Detect and visually output in the console whether the lockfile of frontend dependencies has been modified.
+**Description**: Detect and visually output in the console whether the lockfile of frontend dependencies has been modified, and automatically install dependencies by default to keep in sync.
 
-**Use cases**: Recommended to use after Git operations such as pulling updates (`git pull`), switching branches (`git checkout`), or merging code. It helps detect if upstream dependency lockfiles (like `pnpm-lock.yaml`) have changed. If a change is detected, you can invoke a package manager's installation command through specific options to synchronize the local environment with upstream instantly, preventing obscure bugs caused by outdated dependencies.
+**Use cases**: Recommended to use after Git operations such as pulling updates (`git pull`), switching branches (`git checkout`), or merging code. It helps detect if upstream dependency lockfiles (like `pnpm-lock.yaml`) have changed. If a change is detected, it will automatically invoke a package manager's installation command to synchronize the local environment with upstream instantly, preventing obscure bugs caused by outdated dependencies.
 
-**Core Workflow**: Execute a Git diff comparing the project's lockfile (e.g. `pnpm-lock.yaml` or corresponding environment lockfile) from the original HEAD. Print its modification status in the console. Furthermore, trigger the package manager to reinstall dependencies to sync with upstream if directed by the command options.
+**Core Workflow**: Execute a Git diff comparing the project's lockfile (e.g. `pnpm-lock.yaml` or corresponding environment lockfile) from the original HEAD. Print its modification status in the console. Furthermore, trigger the package manager to reinstall dependencies to sync with upstream by default, or skip installation if directed by the command options.
 
 **CLI Commands**:
 
@@ -312,17 +312,17 @@ Usage: vr lockfile-check [flags...]
 
 Flags:
       --package-manager string        Package manager (npm, yarn, pnpm)  # default: 'pnpm'
-      --install                       Auto install dependencies if lockfile changed
+      --skip-install                  Skip install dependencies when lockfile changed
 ```
 
 _Example_:
 
 ```shell
-# Check the synchronization status of the current lockfile
+# Check the synchronization status of the current lockfile and install dependencies if changed
 pnpm exec vr lockfile-check
 
-# Check current status, forcefully run installation to sync dependencies if updates exist
-pnpm exec vr lockfile-check --install
+# Check current status but skip installation even if updates exist
+pnpm exec vr lockfile-check --skip-install
 
 # Specify other package managers for checking
 pnpm exec vr lockfile-check --package-manager npm
@@ -333,7 +333,7 @@ _It is also recommended to integrate with `simple-git-hooks` or `husky` in `pack
 ```json
 {
   "simple-git-hooks": {
-    "post-merge": "pnpm exec vr lockfile-check --install"
+    "post-merge": "pnpm exec vr lockfile-check"
   }
 }
 ```
@@ -345,7 +345,7 @@ import { lockfileCheck } from '@varlet/release'
 
 lockfileCheck({
   packageManager?: 'npm' | 'yarn' | 'pnpm' // Choose package manager, defaults to 'pnpm'
-  install?: boolean                        // Whether to automatically run install if lockfile is out of sync
+  skipInstall?: boolean                    // Whether to skip installation if lockfile is out of sync
 })
 ```
 
