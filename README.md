@@ -20,11 +20,35 @@
 
 > `Varlet Release` requires `Node.js` ^20.19.0 || >=22.12.0 and `esm` only.
 
-## Installation
+## Quick Start
+
+Install dependencies:
 
 ```shell
-pnpm add @varlet/release -D
+pnpm add @varlet/release simple-git-hooks -D
 ```
+
+Add the following configuration to `package.json`:
+
+```json
+{
+  "scripts": {
+    "prepare": "simple-git-hooks",
+    "release": "vr release",
+    "changelog": "vr changelog"
+  },
+  "simple-git-hooks": {
+    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1",
+    "post-merge": "pnpm exec vr lockfile-check --install"
+  }
+}
+```
+
+Now you can:
+
+- Write commits following the [Conventional Commits](https://www.conventionalcommits.org/) format, `commit-lint` will automatically validate them.
+- After pulling or merging code, `lockfile-check` will automatically detect lockfile changes (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`) and reinstall dependencies.
+- Run `pnpm release` to start the interactive release workflow.
 
 ## Usage
 
@@ -61,29 +85,29 @@ _Flags Reference_:
 Usage: vr release [flags...]
 
 Flags:
-  -r, --remote <string>             Remote repository name
-  -s, --skip-npm-publish            Skip npm publish
-      --skip-changelog              Skip generating changelog
-      --skip-git-tag                Skip git tag
-  -t, --npm-tag <string>            npm tag
-  -c, --check-remote-version        Check remote version
+      --remote string                 Remote repository name  # default: 'origin'
+      --skip-npm-publish              Skip npm publish
+      --skip-changelog                Skip generating changelog
+      --skip-git-tag                  Skip git tag
+      --npm-tag string                npm tag
+      --check-remote-version          Check remote version
 ```
 
 _Example_:
 
 ```shell
 # Release all packages and execute the full workflow
-npx vr release
-
-# Specify remote repository name (default origin)
-npx vr release -r origin
+pnpm exec vr release
 
 # Skip npm publishing
-npx vr release -s
+pnpm exec vr release --skip-npm-publish
 # Skip generating changelog
-npx vr release --skip-changelog
+pnpm exec vr release --skip-changelog
 # Check remote version, interrupt execution if the identical version already exists
-npx vr release -c
+pnpm exec vr release --check-remote-version
+
+# Specify the git remote name for pushing tags (useful when multiple remotes are configured, e.g. upstream, fork)
+pnpm exec vr release --remote upstream
 ```
 
 **Node API**:
@@ -134,20 +158,20 @@ _Flags Reference_:
 Usage: vr publish [flags...]
 
 Flags:
-  -c, --check-remote-version        Check remote version
-  -t, --npm-tag <string>            npm tag
+      --check-remote-version          Check remote version
+      --npm-tag string                npm tag
 ```
 
 _Example_:
 
 ```shell
 # Publish directly to npm
-npx vr publish
+pnpm exec vr publish
 
 # Check if the same version already exists due to network or other reasons, and abort if so
-npx vr publish -c
+pnpm exec vr publish --check-remote-version
 # Specify the npm dist-tag
-npx vr publish -t alpha
+pnpm exec vr publish --npm-tag alpha
 ```
 
 **Node API**:
@@ -181,20 +205,20 @@ _Flags Reference_:
 Usage: vr changelog [flags...]
 
 Flags:
-  -c, --release-count <number>      Release count, default 0
-  -f, --file <string>               Changelog filename
+      --release-count number          Release count  # default: 0
+      --file string                   Changelog filename  # default: 'CHANGELOG.md'
 ```
 
 _Example_:
 
 ```shell
 # Generate changelogs for all history and output as CHANGELOG.md in the current directory
-npx vr changelog
+pnpm exec vr changelog
 
 # Specify the generated changelog filename
-npx vr changelog -f my-changelog.md
+pnpm exec vr changelog --file my-changelog.md
 # Limit the range of release versions to generate changelogs for (0 means all)
-npx vr changelog -c 0
+pnpm exec vr changelog --release-count 0
 ```
 
 **Node API**:
@@ -230,20 +254,20 @@ _Flags Reference_:
 Usage: vr commit-lint [flags...]
 
 Flags:
-  -p, --commit-message-path <string>  Git commit message path
-  -r, --commit-message-re <string>    Validate the regex for commit message
-  -e, --error-message <string>        Error message displayed on validation failure
-  -w, --warning-message <string>      Warning message displayed on validation failure
+      --commit-message-path <string>  Git commit message path
+      --commit-message-re string      Validate the regex for commit message
+      --error-message string          Error message displayed on validation failure
+      --warning-message string        Warning message displayed on validation failure
 ```
 
 _Example_:
 
 ```shell
 # Check if the commit message at the given path is standard
-npx vr commit-lint -p .git/COMMIT_EDITMSG
+pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG
 
 # Customize regex validation and prompt message
-npx vr commit-lint -p .git/COMMIT_EDITMSG -r "^feat: .*" -e "Commit validation failed"
+pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG --commit-message-re "^feat: .*" --error-message "Commit validation failed"
 ```
 
 _It is recommended to integrate with `simple-git-hooks` or `husky` in `package.json`:_
@@ -251,7 +275,7 @@ _It is recommended to integrate with `simple-git-hooks` or `husky` in `package.j
 ```json
 {
   "simple-git-hooks": {
-    "commit-msg": "npx vr commit-lint -p $1"
+    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1"
   }
 }
 ```
@@ -287,21 +311,21 @@ _Flags Reference_:
 Usage: vr lockfile-check [flags...]
 
 Flags:
-  -m, --package-manager <string>    Package manager (npm, yarn, pnpm), default pnpm
-  -i, --install                     Auto install dependencies if lockfile changed
+      --package-manager string        Package manager (npm, yarn, pnpm)  # default: 'pnpm'
+      --install                       Auto install dependencies if lockfile changed
 ```
 
 _Example_:
 
 ```shell
 # Check the synchronization status of the current lockfile
-npx vr lockfile-check
+pnpm exec vr lockfile-check
 
 # Check current status, forcefully run installation to sync dependencies if updates exist
-npx vr lockfile-check -i
+pnpm exec vr lockfile-check --install
 
-# Specify other package managers for checking (defaults to pnpm)
-npx vr lockfile-check -m npm
+# Specify other package managers for checking
+pnpm exec vr lockfile-check --package-manager npm
 ```
 
 _It is also recommended to integrate with `simple-git-hooks` or `husky` in `package.json` (e.g. trigger checks and installations automatically during the `post-merge` or `post-checkout` hooks):_
@@ -309,7 +333,7 @@ _It is also recommended to integrate with `simple-git-hooks` or `husky` in `pack
 ```json
 {
   "simple-git-hooks": {
-    "post-merge": "npx vr lockfile-check -i"
+    "post-merge": "pnpm exec vr lockfile-check --install"
   }
 }
 ```
