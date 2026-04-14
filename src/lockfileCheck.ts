@@ -4,7 +4,7 @@ import { x as exec } from 'tinyexec'
 
 export type PackageManager = 'npm' | 'yarn' | 'pnpm'
 
-export interface LockfileSyncCheckOptions {
+export interface LockfileCheckOptions {
   packageManager?: PackageManager
   install?: boolean
 }
@@ -53,7 +53,7 @@ export async function installDependencies(packageManager: PackageManager): Promi
   }
 }
 
-export async function lockfileSyncCheck(options: LockfileSyncCheckOptions = {}): Promise<void> {
+export async function lockfileCheck(options: LockfileCheckOptions = {}): Promise<void> {
   try {
     const pkgManager = (options.packageManager || 'pnpm') as PackageManager
     const installFlag = options.install || false

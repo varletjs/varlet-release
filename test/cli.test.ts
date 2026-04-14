@@ -5,7 +5,7 @@ const indexMock = vi.hoisted(() => ({
   publish: vi.fn(),
   changelog: vi.fn(),
   commitLint: vi.fn(),
-  lockfileSyncCheck: vi.fn(),
+  lockfileCheck: vi.fn(),
 }))
 
 vi.mock('../src/index.js', () => indexMock)
@@ -27,7 +27,7 @@ describe('cli', () => {
     indexMock.publish.mockClear()
     indexMock.changelog.mockClear()
     indexMock.commitLint.mockClear()
-    indexMock.lockfileSyncCheck.mockClear()
+    indexMock.lockfileCheck.mockClear()
   })
 
   afterEach(() => {
@@ -154,10 +154,10 @@ describe('cli', () => {
     )
   })
 
-  it('runs lockfile-sync-check command with options', async () => {
-    await runCli(['lockfile-sync-check', '--packageManager', 'npm', '--install'])
+  it('runs lockfile-check command with options', async () => {
+    await runCli(['lockfile-check', '--packageManager', 'npm', '--install'])
 
-    expect(indexMock.lockfileSyncCheck).toHaveBeenCalledWith(
+    expect(indexMock.lockfileCheck).toHaveBeenCalledWith(
       expect.objectContaining({
         packageManager: 'npm',
         install: true,
@@ -165,10 +165,10 @@ describe('cli', () => {
     )
   })
 
-  it('supports short flags for lockfile-sync-check', async () => {
-    await runCli(['lockfile-sync-check', '-m', 'yarn', '-i'])
+  it('supports short flags for lockfile-check', async () => {
+    await runCli(['lockfile-check', '-m', 'yarn', '-i'])
 
-    expect(indexMock.lockfileSyncCheck).toHaveBeenCalledWith(
+    expect(indexMock.lockfileCheck).toHaveBeenCalledWith(
       expect.objectContaining({
         packageManager: 'yarn',
         install: true,

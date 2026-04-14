@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { cli, command } from 'cleye'
 import pkg from '../package.json' with { type: 'json' }
-import { changelog, commitLint, lockfileSyncCheck, publish, release } from './index.ts'
+import { changelog, commitLint, lockfileCheck, publish, release } from './index.ts'
 
 cli({
   name: 'vr',
@@ -71,7 +71,7 @@ cli({
     ),
     command(
       {
-        name: 'lockfile-sync-check',
+        name: 'lockfile-check',
         flags: {
           packageManager: {
             type: String,
@@ -85,7 +85,7 @@ cli({
           description: 'Check if lockfile has been updated and optionally install dependencies',
         },
       },
-      (argv) => lockfileSyncCheck(argv.flags as any),
+      (argv) => lockfileCheck(argv.flags as any),
     ),
   ],
 })

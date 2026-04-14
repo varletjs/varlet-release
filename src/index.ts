@@ -1,4 +1,4 @@
 export * from './release.ts'
 export * from './changelog.ts'
 export * from './commitLint.ts'
-export * from './lockfileSyncCheck.ts'
+export * from './lockfileCheck.ts'

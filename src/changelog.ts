@@ -206,7 +206,7 @@ export function changelog({
   releaseCount = 0,
   file = 'CHANGELOG.md',
   showTypes = ALWAYS_SHOW_TYPES,
-  outputUnreleased = false,
+  outputUnreleased,
   writerOpt,
 }: ChangelogOptions = {}): Promise<void> {
   const s = spinner()

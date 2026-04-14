@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from 'vite-plus/test'
-import { checkLockfileSync, getLockfilePath, installDependencies, lockfileSyncCheck } from '../src/lockfileSyncCheck'
+import { checkLockfileSync, getLockfilePath, installDependencies, lockfileCheck } from '../src/lockfileCheck'
 
 const promptsMock = vi.hoisted(() => {
   const spinner = vi.fn(() => ({
@@ -16,7 +16,7 @@ vi.mock('tinyexec', () => ({
   x: vi.fn(),
 }))
 
-describe('lockfileSyncCheck', () => {
+describe('lockfileCheck', () => {
   afterEach(() => {
     vi.clearAllMocks()
   })
@@ -116,19 +116,19 @@ describe('lockfileSyncCheck', () => {
     })
   })
 
-  describe('lockfileSyncCheck', () => {
+  describe('lockfileCheck', () => {
     it('should check lockfile sync with default options', async () => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue({ stdout: 'test.txt\n' } as any)
 
-      await expect(lockfileSyncCheck()).resolves.toBeUndefined()
+      await expect(lockfileCheck()).resolves.toBeUndefined()
     })
 
     it('should use custom package manager', async () => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue({ stdout: 'yarn.lock\n' } as any)
 
-      await expect(lockfileSyncCheck({ packageManager: 'yarn' })).resolves.toBeUndefined()
+      await expect(lockfileCheck({ packageManager: 'yarn' })).resolves.toBeUndefined()
     })
 
     it('should install dependencies when install flag is true and lockfile updated', async () => {
@@ -137,7 +137,7 @@ describe('lockfileSyncCheck', () => {
         .mockResolvedValueOnce({ stdout: 'pnpm-lock.yaml\n' } as any)
         .mockResolvedValueOnce(undefined as any)
 
-      await lockfileSyncCheck({ install: true })
+      await lockfileCheck({ install: true })
 
       expect(mockExec).toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
     })
@@ -146,7 +146,7 @@ describe('lockfileSyncCheck', () => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue({ stdout: 'test.txt\n' } as any)
 
-      await lockfileSyncCheck({ install: true })
+      await lockfileCheck({ install: true })
 
       expect(mockExec).toHaveBeenCalledWith('git', ['diff', '--name-only', 'ORIG_HEAD', 'HEAD'], { throwOnError: true })
       expect(mockExec).not.toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
@@ -161,7 +161,7 @@ describe('lockfileSyncCheck', () => {
       const loggerMock = await import('rslog')
       const mockError = vi.spyOn(loggerMock.logger, 'error')
 
-      await expect(lockfileSyncCheck({ install: true })).resolves.toBeUndefined()
+      await expect(lockfileCheck({ install: true })).resolves.toBeUndefined()
       expect(mockError).toHaveBeenCalledWith('Error checking lockfile sync:', expect.any(Error))
     })
   })
