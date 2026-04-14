@@ -1,3 +1,20 @@
+## [2.1.1](https://github.com/varletjs/release/compare/v2.1.0...v2.1.1) (2026-04-14)
+
+
+### Bug Fixes
+
+* **lockfileCheck:** add package manager name guard ([ab8c8f6](https://github.com/varletjs/release/commit/ab8c8f6502e86670c6e8f40e95b0cba6529e1c47))
+
+
+### Features
+
+* **release:** simplify version number preview when selecting a version ([815517e](https://github.com/varletjs/release/commit/815517e6339dbeb93eeb28842e56463e3b15aebb))
+
+
+### Refactoring
+
+* **commitLint.ts:** remove outdated reference links ([93537da](https://github.com/varletjs/release/commit/93537da202f3eb3119c5c49d882c78655adb9915))
+
 # [2.1.0](https://github.com/varletjs/release/compare/v2.0.1...v2.1.0) (2026-04-14)
 
 
@@ -5,6 +22,12 @@
 
 * **changelog:** replace conventional-changelog with standard-changelog ([dc860c5](https://github.com/varletjs/release/commit/dc860c50c8135a3c137f357001082932f596f6a9))
 * **lockfile:** rename lockfileSyncCheck to lockfileCheck and optimize functionality ([6d427e5](https://github.com/varletjs/release/commit/6d427e57a00e4881f515571022a62c8b9c9ff523))
+
+## [2.0.1](https://github.com/varletjs/release/compare/v2.0.0...v2.0.1) (2026-04-12)
+
+
+### Refactoring
+
 * **release:** make execGit function async ([1792cd9](https://github.com/varletjs/release/commit/1792cd9646e0de20ae2ce5366316deebf2637b21))
 
 # [2.0.0](https://github.com/varletjs/release/compare/v1.2.0...v2.0.0) (2026-04-12)
