@@ -1,3 +1,12 @@
+# [2.2.0](https://github.com/varletjs/release/compare/v2.1.1...v2.2.0) (2026-04-14)
+
+
+### Features
+
+* **commitLint:** pass path directly instead of using --commit-message-path flag ([#46](https://github.com/varletjs/release/issues/46)) ([1efac81](https://github.com/varletjs/release/commit/1efac81bb3dcc07bacd11712b9501d506eeb36a7))
+* **docs:** update README for quick start instructions and git hooks integration ([b40a7e5](https://github.com/varletjs/release/commit/b40a7e5dbc5696e7c5f826753d78a7af16aae2dc))
+* **lockfile-check:** change default behavior to auto-install dependencies and add skip option ([#47](https://github.com/varletjs/release/issues/47)) ([1995602](https://github.com/varletjs/release/commit/19956022cecac8613f876739ce6072b974c0a900))
+
 ## [2.1.1](https://github.com/varletjs/release/compare/v2.1.0...v2.1.1) (2026-04-14)
 
 
