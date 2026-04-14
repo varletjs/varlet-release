@@ -58,6 +58,11 @@ export async function lockfileCheck(options: LockfileCheckOptions = {}): Promise
     const pkgManager = (options.packageManager || 'pnpm') as PackageManager
     const installFlag = options.install || false
 
+    if (!['npm', 'yarn', 'pnpm'].includes(pkgManager)) {
+      logger.error(`Unsupported package manager: ${pkgManager}`)
+      return
+    }
+
     const needSync = await checkLockfileSync(pkgManager)
 
     if (needSync) {
