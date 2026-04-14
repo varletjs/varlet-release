@@ -38,7 +38,7 @@ pnpm add @varlet/release simple-git-hooks -D
     "changelog": "vr changelog"
   },
   "simple-git-hooks": {
-    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1",
+    "commit-msg": "pnpm exec vr commit-lint $1",
     "post-merge": "pnpm exec vr lockfile-check --install"
   }
 }
@@ -248,13 +248,15 @@ changelog({
 
 **CMD 命令**：
 
-_标志参考_：
+_参数参考_：
 
 ```text
-用法: vr commit-lint [标志...]
+用法: vr commit-lint <commit-message-path> [标志...]
+
+参数:
+  <commit-message-path>             Git commit message 路径（必填）
 
 标志:
-      --commit-message-path <string>  Git commit message 路径
       --commit-message-re string      验证 commit message 是否通过的正则表达式
       --error-message string          验证失败时显示的错误信息
       --warning-message string        验证失败时显示的警告信息
@@ -264,10 +266,10 @@ _使用示例_：
 
 ```shell
 # 检测指路径的 commit message 是否符合规范
-pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG
+pnpm exec vr commit-lint .git/COMMIT_EDITMSG
 
 # 定制指定的校验正则表达式和提示信息
-pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG --commit-message-re "^feat: .*" --error-message "提交校验失败"
+pnpm exec vr commit-lint .git/COMMIT_EDITMSG --commit-message-re "^feat: .*" --error-message "提交校验失败"
 ```
 
 _建议配合并在 `package.json` 中的 `simple-git-hooks` 或 `husky` 一同集成运作：_
@@ -275,7 +277,7 @@ _建议配合并在 `package.json` 中的 `simple-git-hooks` 或 `husky` 一同�
 ```json
 {
   "simple-git-hooks": {
-    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1"
+    "commit-msg": "pnpm exec vr commit-lint $1"
   }
 }
 ```
