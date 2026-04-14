@@ -79,7 +79,7 @@ cli({
             default: 'pnpm',
             description: 'Package manager (npm, yarn, pnpm), default pnpm',
           },
-          install: { type: Boolean, alias: 'i', description: 'Auto install dependencies if lockfile changed' },
+          skipInstall: { type: Boolean, alias: 's', description: 'Skip install dependencies when lockfile changed' },
         },
         help: {
           description: 'Check if lockfile has been updated and optionally install dependencies',

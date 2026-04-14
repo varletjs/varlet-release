@@ -6,7 +6,7 @@ export type PackageManager = 'npm' | 'yarn' | 'pnpm'
 
 export interface LockfileCheckOptions {
   packageManager?: PackageManager
-  install?: boolean
+  skipInstall?: boolean
 }
 
 export function getLockfilePath(packageManager: PackageManager): string {
@@ -56,7 +56,7 @@ export async function installDependencies(packageManager: PackageManager): Promi
 export async function lockfileCheck(options: LockfileCheckOptions = {}): Promise<void> {
   try {
     const pkgManager = (options.packageManager || 'pnpm') as PackageManager
-    const installFlag = options.install || false
+    const skipInstallFlag = options.skipInstall || false
 
     if (!['npm', 'yarn', 'pnpm'].includes(pkgManager)) {
       logger.error(`Unsupported package manager: ${pkgManager}`)
@@ -67,7 +67,7 @@ export async function lockfileCheck(options: LockfileCheckOptions = {}): Promise
 
     if (needSync) {
       logger.warn('Lockfile has been updated!')
-      if (installFlag) {
+      if (!skipInstallFlag) {
         await installDependencies(pkgManager)
       }
     }
