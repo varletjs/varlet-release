@@ -194,10 +194,10 @@ function computeExpectVersion(currentVersion: string, type: ReleaseType): string
 async function getReleaseType(currentVersion: string) {
   return unwrapPromptResult(
     await select({
-      message: 'Please select release type',
+      message: `Please select release type, current version ${currentVersion}`,
       options: RELEASE_TYPES.map((type) => {
         const expectVersion = computeExpectVersion(currentVersion, type as ReleaseType)
-        return { label: `${type} (${currentVersion} → ${expectVersion})`, value: type }
+        return { label: `${type} (${expectVersion})`, value: type }
       }),
     }),
   ) as ReleaseType
