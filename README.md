@@ -38,7 +38,7 @@ Add the following configuration to `package.json`:
     "changelog": "vr changelog"
   },
   "simple-git-hooks": {
-    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1",
+    "commit-msg": "pnpm exec vr commit-lint $1",
     "post-merge": "pnpm exec vr lockfile-check --install"
   }
 }
@@ -248,13 +248,15 @@ changelog({
 
 **CLI Commands**:
 
-_Flags Reference_:
+_Parameters Reference_:
 
 ```text
-Usage: vr commit-lint [flags...]
+Usage: vr commit-lint <commit-message-path> [flags...]
+
+Parameters:
+  <commit-message-path>             Git commit message path (required)
 
 Flags:
-      --commit-message-path <string>  Git commit message path
       --commit-message-re string      Validate the regex for commit message
       --error-message string          Error message displayed on validation failure
       --warning-message string        Warning message displayed on validation failure
@@ -264,10 +266,10 @@ _Example_:
 
 ```shell
 # Check if the commit message at the given path is standard
-pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG
+pnpm exec vr commit-lint .git/COMMIT_EDITMSG
 
 # Customize regex validation and prompt message
-pnpm exec vr commit-lint --commit-message-path .git/COMMIT_EDITMSG --commit-message-re "^feat: .*" --error-message "Commit validation failed"
+pnpm exec vr commit-lint .git/COMMIT_EDITMSG --commit-message-re "^feat: .*" --error-message "Commit validation failed"
 ```
 
 _It is recommended to integrate with `simple-git-hooks` or `husky` in `package.json`:_
@@ -275,7 +277,7 @@ _It is recommended to integrate with `simple-git-hooks` or `husky` in `package.j
 ```json
 {
   "simple-git-hooks": {
-    "commit-msg": "pnpm exec vr commit-lint --commit-message-path $1"
+    "commit-msg": "pnpm exec vr commit-lint $1"
   }
 }
 ```

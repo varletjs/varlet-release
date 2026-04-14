@@ -53,8 +53,8 @@ cli({
     command(
       {
         name: 'commit-lint',
+        parameters: ['<commitMessagePath>'],
         flags: {
-          commitMessagePath: { type: String, alias: 'p', default: '', description: 'Git commit message path' },
           commitMessageRe: {
             type: String,
             alias: 'r',
@@ -67,7 +67,13 @@ cli({
           description: 'Lint commit message',
         },
       },
-      (argv) => commitLint(argv.flags),
+      (argv) =>
+        commitLint({
+          commitMessagePath: argv._.commitMessagePath,
+          commitMessageRe: argv.flags.commitMessageRe,
+          errorMessage: argv.flags.errorMessage,
+          warningMessage: argv.flags.warningMessage,
+        }),
     ),
     command(
       {
