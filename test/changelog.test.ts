@@ -105,7 +105,14 @@ describe('changelog', () => {
       { msg: 'build: update vite', date: '2024-01-10T00:00:00Z' },
       { msg: 'ci: update github actions', date: '2024-01-11T00:00:00Z' },
       { msg: 'feat!: breaking change new API', date: '2024-01-12T00:00:00Z' },
-      { msg: 'fix(sub)!: breaking bug\n\nThis is the body of the breaking change.', date: '2024-01-13T00:00:00Z' },
+      {
+        msg: 'fix(sub)!: breaking bug',
+        date: '2024-01-13T00:00:00Z',
+      },
+      {
+        msg: 'refactor: breaking text for body\n\nBREAKING CHANGES:\nhello',
+        date: '2024-01-13T00:00:00Z',
+      },
     ]
 
     for (const { msg, date } of commits) {
@@ -158,5 +165,119 @@ describe('changelog', () => {
     await changelog({ cwd: testRepo, file: customFileName })
     const filePath = join(testRepo, customFileName)
     expect(existsSync(filePath)).toBe(true)
+  })
+
+  it('should handle custom showTypes to include only specified types', async () => {
+    await changelog({ cwd: testRepo, showTypes: ['feat', 'fix'], file: 'custom-types.md' })
+    const filePath = join(testRepo, 'custom-types.md')
+    const content = readFileSync(filePath, 'utf-8')
+    const sanitizedContent = content
+      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
+      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+
+    expect(sanitizedContent).toContain('### Features')
+    expect(sanitizedContent).toContain('### Bug Fixes')
+    expect(sanitizedContent).not.toContain('### Performance Improvements')
+    expect(sanitizedContent).not.toContain('### Reverts')
+    expect(sanitizedContent).not.toContain('### Refactoring')
+  })
+
+  it('should include breaking changes even when type is not in showTypes', async () => {
+    await changelog({ cwd: testRepo, showTypes: ['feat'], file: 'breaking-test.md' })
+    const filePath = join(testRepo, 'breaking-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+    const sanitizedContent = content
+      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
+      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+
+    // feat should be included
+    expect(sanitizedContent).toContain('### Features')
+    // fix with breaking change should be included even though fix is not in showTypes
+    // Note: scope is shown as **sub:** in bold, and type prefix is removed
+    expect(sanitizedContent).toContain('**sub:**')
+    expect(sanitizedContent).toContain('breaking bug')
+    // feat! breaking change should be included
+    expect(sanitizedContent).toContain('breaking change new API')
+    // perf should not be included
+    expect(sanitizedContent).not.toContain('### Performance Improvements')
+  })
+
+  it('should link issue references in commit subject', async () => {
+    await changelog({ cwd: testRepo, showTypes: ['feat'], file: 'issue-link-test.md' })
+    const filePath = join(testRepo, 'issue-link-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+
+    // Check that #1 is linked
+    expect(content).toMatch(/\[#1\]\(.*?\/issues\/1\)/)
+  })
+
+  it('should handle commits with scope', async () => {
+    await changelog({ cwd: testRepo, showTypes: ['fix'], file: 'scope-test.md' })
+    const filePath = join(testRepo, 'scope-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+    const sanitizedContent = content
+      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
+      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+
+    // fix(sub) should show scope in bold format: **sub:**
+    expect(sanitizedContent).toContain('**sub:**')
+    expect(sanitizedContent).toContain('breaking bug')
+  })
+
+  it('should handle empty scope asterisk', async () => {
+    // The transform function should convert scope="*" to empty string
+    // This is implicitly tested by ensuring no "*:" appears in output
+    await changelog({ cwd: testRepo, file: 'asterisk-test.md' })
+    const filePath = join(testRepo, 'asterisk-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+
+    // Should not have "*:" as scope
+    expect(content).not.toContain('(*):')
+  })
+
+  it('should generate short hash from full hash', async () => {
+    await changelog({ cwd: testRepo, file: 'hash-test.md' })
+    const filePath = join(testRepo, 'hash-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+
+    // Commits should have 7-character short hash in the commit links
+    expect(content).toMatch(/\[.*?\]\(.*?\/commit\/[a-f0-9]+\)/)
+    // Should not have full 40-character hash visible in the main text (only in URLs)
+    const sanitizedContent = content.replace(/\[.*?\]\(.*?\/commit\/[a-f0-9]+\)/g, '')
+    expect(sanitizedContent).not.toMatch(/[a-f0-9]{40}/)
+  })
+
+  it('should handle revert commits', async () => {
+    await changelog({ cwd: testRepo, showTypes: ['revert'], file: 'revert-test.md' })
+    const filePath = join(testRepo, 'revert-test.md')
+    const content = readFileSync(filePath, 'utf-8')
+    const sanitizedContent = content
+      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
+      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+
+    expect(sanitizedContent).toContain('### Reverts')
+    // Note: type prefix is removed, so we only see the subject
+    expect(sanitizedContent).toContain('revert feat')
+  })
+
+  it('should handle all commit types when showTypes includes everything', async () => {
+    const allTypes = ['feat', 'fix', 'perf', 'revert', 'refactor', 'docs', 'style', 'test', 'build', 'ci'] as any[]
+    await changelog({ cwd: testRepo, showTypes: allTypes, file: 'all-types.md' })
+    const filePath = join(testRepo, 'all-types.md')
+    const content = readFileSync(filePath, 'utf-8')
+    const sanitizedContent = content
+      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
+      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+
+    expect(sanitizedContent).toContain('### Features')
+    expect(sanitizedContent).toContain('### Bug Fixes')
+    expect(sanitizedContent).toContain('### Performance Improvements')
+    expect(sanitizedContent).toContain('### Reverts')
+    expect(sanitizedContent).toContain('### Refactoring')
+    expect(sanitizedContent).toContain('### Documentation')
+    expect(sanitizedContent).toContain('### Styles')
+    expect(sanitizedContent).toContain('### Tests')
+    expect(sanitizedContent).toContain('### Build System')
+    expect(sanitizedContent).toContain('### Continuous Integration')
   })
 })
