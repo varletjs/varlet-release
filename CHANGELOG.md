@@ -1,4 +1,9 @@
-# [2.2.0](https://github.com/varletjs/release/compare/v2.1.1...v2.2.0) (2026-04-14)
+## [2.2.1](https://github.com/varletjs/release/compare/v2.2.0...v2.2.1) (2026-04-15)
+
+
+### Bug Fixes
+
+* **release:** fix package.json not reverting on single-package preview release ([f0dfa7c](https://github.com/varletjs/release/commit/f0dfa7cf7c053ee19697530df4148dff7580e294))
 
 
 ### Features
