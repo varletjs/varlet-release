@@ -217,11 +217,11 @@ async function getReleaseVersion(currentVersion: string) {
   }
 }
 
-async function restorePackageJsons() {
-  try {
-    await execGit('restore', '**/package.json', 'package.json')
-  } catch {
-    /* empty */
+async function restorePackageJsons(cwd: string = process.cwd()) {
+  const packageJsons = getPackageJsons(cwd)
+  const paths = packageJsons.map(({ filePath }) => filePath)
+  if (paths.length > 0) {
+    await execGit('restore', ...paths)
   }
 }
 
@@ -287,7 +287,7 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
     logger.success(`Release version ${expectVersion} successfully!`)
 
     if (isPreRelease) {
-      await restorePackageJsons()
+      await restorePackageJsons(cwd)
     }
   } catch (error: unknown) {
     logger.error(error)
