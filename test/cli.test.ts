@@ -34,88 +34,71 @@ describe('cli', () => {
     vi.restoreAllMocks()
   })
 
-  it('runs release command with options', async () => {
-    await runCli([
+  it.each([
+    [
       'release',
-      '--remote',
-      'upstream',
-      '--skip-npm-publish',
-      '--skip-changelog',
-      '--skip-git-tag',
-      '--npm-tag',
-      'beta',
-      '--check-remote-version',
-    ])
-
-    expect(indexMock.release).toHaveBeenCalledWith(
-      expect.objectContaining({
+      [
+        'release',
+        '--remote',
+        'upstream',
+        '--skip-npm-publish',
+        '--skip-changelog',
+        '--skip-git-tag',
+        '--npm-tag',
+        'beta',
+        '--check-remote-version',
+      ],
+      indexMock.release,
+      {
         remote: 'upstream',
         skipNpmPublish: true,
         skipChangelog: true,
         skipGitTag: true,
         npmTag: 'beta',
         checkRemoteVersion: true,
-      }),
-    )
-  })
-
-  it('supports short flags for release', async () => {
-    await runCli(['release', '-r', 'origin', '-s', '--skip-changelog', '--skip-git-tag', '-t', 'next', '-c'])
-
-    expect(indexMock.release).toHaveBeenCalledWith(
-      expect.objectContaining({
+      },
+    ],
+    [
+      'release short flags',
+      ['release', '-r', 'origin', '-s', '--skip-changelog', '--skip-git-tag', '-t', 'next', '-c'],
+      indexMock.release,
+      {
         remote: 'origin',
         skipNpmPublish: true,
         skipChangelog: true,
         skipGitTag: true,
         npmTag: 'next',
         checkRemoteVersion: true,
-      }),
-    )
-  })
+      },
+    ],
+    [
+      'publish',
+      ['publish', '--check-remote-version', '--npm-tag', 'beta'],
+      indexMock.publish,
+      { checkRemoteVersion: true, npmTag: 'beta' },
+    ],
+    [
+      'publish short flags',
+      ['publish', '-c', '-t', 'beta'],
+      indexMock.publish,
+      { checkRemoteVersion: true, npmTag: 'beta' },
+    ],
+    [
+      'changelog',
+      ['changelog', '--releaseCount', '3', '--file', 'CHANGELOG.md'],
+      indexMock.changelog,
+      { releaseCount: 3, file: 'CHANGELOG.md' },
+    ],
+    [
+      'changelog short flags',
+      ['changelog', '-c', '5', '-f', 'CHANGELOG.md'],
+      indexMock.changelog,
+      { releaseCount: 5, file: 'CHANGELOG.md' },
+    ],
+  ])('runs %s command with expected flags', async (_name, args, spy, expectedFlags) => {
+    await runCli(args as string[])
 
-  it('runs publish command with options', async () => {
-    await runCli(['publish', '--check-remote-version', '--npm-tag', 'beta'])
-
-    expect(indexMock.publish).toHaveBeenCalledWith(
-      expect.objectContaining({
-        checkRemoteVersion: true,
-        npmTag: 'beta',
-      }),
-    )
-  })
-
-  it('supports short flags for publish', async () => {
-    await runCli(['publish', '-c', '-t', 'beta'])
-
-    expect(indexMock.publish).toHaveBeenCalledWith(
-      expect.objectContaining({
-        checkRemoteVersion: true,
-        npmTag: 'beta',
-      }),
-    )
-  })
-
-  it('runs changelog command with options', async () => {
-    await runCli(['changelog', '--releaseCount', '3', '--file', 'CHANGELOG.md'])
-
-    expect(indexMock.changelog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        releaseCount: 3,
-        file: 'CHANGELOG.md',
-      }),
-    )
-  })
-
-  it('supports short flags for changelog', async () => {
-    await runCli(['changelog', '-c', '5', '-f', 'CHANGELOG.md'])
-
-    expect(indexMock.changelog).toHaveBeenCalledWith(
-      expect.objectContaining({
-        releaseCount: 5,
-        file: 'CHANGELOG.md',
-      }),
-    )
+    expect(spy).toHaveBeenCalledWith(expect.objectContaining(expectedFlags))
   })
 
   it('runs commit-lint command with options', async () => {

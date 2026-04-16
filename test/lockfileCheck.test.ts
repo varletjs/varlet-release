@@ -22,53 +22,29 @@ describe('lockfileCheck', () => {
   })
 
   describe('getLockfilePath', () => {
-    it('should return correct lockfile path for pnpm', () => {
-      expect(getLockfilePath('pnpm')).toBe('pnpm-lock.yaml')
-    })
-
-    it('should return correct lockfile path for yarn', () => {
-      expect(getLockfilePath('yarn')).toBe('yarn.lock')
-    })
-
-    it('should return correct lockfile path for npm', () => {
-      expect(getLockfilePath('npm')).toBe('package-lock.json')
+    it.each([
+      ['pnpm', 'pnpm-lock.yaml'],
+      ['yarn', 'yarn.lock'],
+      ['npm', 'package-lock.json'],
+    ])('should return correct lockfile path for %s', (packageManager, expected) => {
+      expect(getLockfilePath(packageManager as any)).toBe(expected)
     })
   })
 
   describe('checkLockfileSync', () => {
-    it('should return true when lockfile is updated', async () => {
+    it.each([
+      ['pnpm', 'pnpm-lock.yaml\npackage.json\n', true],
+      ['pnpm', 'test.txt\npackage.json\n', false],
+      ['yarn', 'yarn.lock\nsrc/index.ts\n', true],
+      ['npm', 'package-lock.json\nREADME.md\n', true],
+    ])('should detect lockfile sync for %s with stdout %j', async (packageManager, stdout, expected) => {
       const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue({ stdout: 'pnpm-lock.yaml\npackage.json\n' } as any)
+      vi.mocked(mockExec).mockResolvedValue({ stdout } as any)
 
-      const result = await checkLockfileSync('pnpm')
-      expect(result).toBe(true)
+      await expect(checkLockfileSync(packageManager as any)).resolves.toBe(expected)
       expect(mockExec).toHaveBeenCalledWith('git', ['diff', '--name-only', 'ORIG_HEAD', 'HEAD'], {
         throwOnError: true,
       })
-    })
-
-    it('should return false when lockfile is not updated', async () => {
-      const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue({ stdout: 'test.txt\npackage.json\n' } as any)
-
-      const result = await checkLockfileSync('pnpm')
-      expect(result).toBe(false)
-    })
-
-    it('should handle yarn lockfile', async () => {
-      const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue({ stdout: 'yarn.lock\nsrc/index.ts\n' } as any)
-
-      const result = await checkLockfileSync('yarn')
-      expect(result).toBe(true)
-    })
-
-    it('should handle npm lockfile', async () => {
-      const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue({ stdout: 'package-lock.json\nREADME.md\n' } as any)
-
-      const result = await checkLockfileSync('npm')
-      expect(result).toBe(true)
     })
 
     it('should return false when git command fails', async () => {
@@ -81,31 +57,13 @@ describe('lockfileCheck', () => {
   })
 
   describe('installDependencies', () => {
-    it('should call package manager install command', async () => {
+    it.each(['pnpm', 'npm', 'yarn'])('should call %s install command', async (packageManager) => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue(undefined as any)
 
-      await installDependencies('pnpm')
+      await installDependencies(packageManager as any)
 
-      expect(mockExec).toHaveBeenCalledWith('pnpm', ['install'], { throwOnError: true })
-    })
-
-    it('should handle npm install', async () => {
-      const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue(undefined as any)
-
-      await installDependencies('npm')
-
-      expect(mockExec).toHaveBeenCalledWith('npm', ['install'], { throwOnError: true })
-    })
-
-    it('should handle yarn install', async () => {
-      const { x: mockExec } = await import('tinyexec')
-      vi.mocked(mockExec).mockResolvedValue(undefined as any)
-
-      await installDependencies('yarn')
-
-      expect(mockExec).toHaveBeenCalledWith('yarn', ['install'], { throwOnError: true })
+      expect(mockExec).toHaveBeenCalledWith(packageManager, ['install'], { throwOnError: true })
     })
 
     it('should throw error when install fails', async () => {

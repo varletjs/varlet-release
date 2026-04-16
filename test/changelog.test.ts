@@ -1,9 +1,10 @@
-import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { tmpdir } from 'node:os'
 import { join, resolve } from 'node:path'
 import { x as exec } from 'tinyexec'
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vite-plus/test'
 import { changelog } from '../src/changelog'
+import { cleanupSandbox, createSandbox, ensureDirSync } from './helpers/sandbox'
 
 const promptsMock = vi.hoisted(() => {
   const spinner = vi.fn(() => ({
@@ -39,18 +40,8 @@ vi.mock('tinyexec', async (importOriginal) => {
   }
 })
 
-function ensureDirSync(path: string) {
-  mkdirSync(path, { recursive: true })
-}
-
-function createSandbox(prefix: string) {
-  return join(tmpdir(), `${prefix}-${Date.now()}-${Math.random().toString(36).slice(2)}`)
-}
-
-function cleanupSandbox(testSandbox?: string) {
-  try {
-    testSandbox && rmSync(testSandbox, { recursive: true, force: true })
-  } catch {}
+function sanitizeChangelog(content: string) {
+  return content.replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD').replace(/\([a-z0-9]{7}\)/g, '(0000000)')
 }
 
 describe('changelog', () => {
@@ -141,9 +132,7 @@ describe('changelog', () => {
     expect(existsSync(filePath)).toBe(true)
 
     const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+    const sanitizedContent = sanitizeChangelog(content)
     expect(sanitizedContent).toMatchSnapshot()
 
     expect(sanitizedContent).toContain('### Features')
@@ -167,28 +156,51 @@ describe('changelog', () => {
     expect(existsSync(filePath)).toBe(true)
   })
 
-  it('should handle custom showTypes to include only specified types', async () => {
-    await changelog({ cwd: testRepo, showTypes: ['feat', 'fix'], file: 'custom-types.md' })
-    const filePath = join(testRepo, 'custom-types.md')
-    const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+  it.each([
+    {
+      name: 'includes only feat and fix when showTypes is narrowed',
+      options: { showTypes: ['feat', 'fix'] as const, file: 'custom-types.md' },
+      present: ['### Features', '### Bug Fixes'],
+      absent: ['### Performance Improvements', '### Reverts', '### Refactoring'],
+    },
+    {
+      name: 'includes all groups when showTypes contains every supported type',
+      options: {
+        showTypes: ['feat', 'fix', 'perf', 'revert', 'refactor', 'docs', 'style', 'test', 'build', 'ci'] as any[],
+        file: 'all-types.md',
+      },
+      present: [
+        '### Features',
+        '### Bug Fixes',
+        '### Performance Improvements',
+        '### Reverts',
+        '### Refactoring',
+        '### Documentation',
+        '### Styles',
+        '### Tests',
+        '### Build System',
+        '### Continuous Integration',
+      ],
+      absent: [],
+    },
+  ])('should $name', async ({ options, present, absent }) => {
+    await changelog({ cwd: testRepo, ...options })
+    const content = readFileSync(join(testRepo, options.file), 'utf-8')
+    const sanitizedContent = sanitizeChangelog(content)
 
-    expect(sanitizedContent).toContain('### Features')
-    expect(sanitizedContent).toContain('### Bug Fixes')
-    expect(sanitizedContent).not.toContain('### Performance Improvements')
-    expect(sanitizedContent).not.toContain('### Reverts')
-    expect(sanitizedContent).not.toContain('### Refactoring')
+    for (const heading of present) {
+      expect(sanitizedContent).toContain(heading)
+    }
+    for (const heading of absent) {
+      expect(sanitizedContent).not.toContain(heading)
+    }
   })
 
   it('should include breaking changes even when type is not in showTypes', async () => {
     await changelog({ cwd: testRepo, showTypes: ['feat'], file: 'breaking-test.md' })
     const filePath = join(testRepo, 'breaking-test.md')
     const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+    const sanitizedContent = sanitizeChangelog(content)
 
     // feat should be included
     expect(sanitizedContent).toContain('### Features')
@@ -215,9 +227,7 @@ describe('changelog', () => {
     await changelog({ cwd: testRepo, showTypes: ['fix'], file: 'scope-test.md' })
     const filePath = join(testRepo, 'scope-test.md')
     const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+    const sanitizedContent = sanitizeChangelog(content)
 
     // fix(sub) should show scope in bold format: **sub:**
     expect(sanitizedContent).toContain('**sub:**')
@@ -251,33 +261,10 @@ describe('changelog', () => {
     await changelog({ cwd: testRepo, showTypes: ['revert'], file: 'revert-test.md' })
     const filePath = join(testRepo, 'revert-test.md')
     const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
+    const sanitizedContent = sanitizeChangelog(content)
 
     expect(sanitizedContent).toContain('### Reverts')
     // Note: type prefix is removed, so we only see the subject
     expect(sanitizedContent).toContain('revert feat')
-  })
-
-  it('should handle all commit types when showTypes includes everything', async () => {
-    const allTypes = ['feat', 'fix', 'perf', 'revert', 'refactor', 'docs', 'style', 'test', 'build', 'ci'] as any[]
-    await changelog({ cwd: testRepo, showTypes: allTypes, file: 'all-types.md' })
-    const filePath = join(testRepo, 'all-types.md')
-    const content = readFileSync(filePath, 'utf-8')
-    const sanitizedContent = content
-      .replace(/\d{4}-\d{2}-\d{2}/g, 'YYYY-MM-DD')
-      .replace(/\([a-z0-9]{7}\)/g, '(0000000)')
-
-    expect(sanitizedContent).toContain('### Features')
-    expect(sanitizedContent).toContain('### Bug Fixes')
-    expect(sanitizedContent).toContain('### Performance Improvements')
-    expect(sanitizedContent).toContain('### Reverts')
-    expect(sanitizedContent).toContain('### Refactoring')
-    expect(sanitizedContent).toContain('### Documentation')
-    expect(sanitizedContent).toContain('### Styles')
-    expect(sanitizedContent).toContain('### Tests')
-    expect(sanitizedContent).toContain('### Build System')
-    expect(sanitizedContent).toContain('### Continuous Integration')
   })
 })
