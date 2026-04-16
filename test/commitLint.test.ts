@@ -7,9 +7,7 @@
  * - Only mock logger (to suppress console noise) and process.exit (to prevent process termination).
  * - fs / readFileSync / semver are NOT mocked — all behaviour is real.
  */
-import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
+import { writeFileSync } from 'node:fs'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import {
   COMMIT_HEADER_RE,
@@ -18,6 +16,7 @@ import {
   getCommitMessage,
   isVersionCommitMessage,
 } from '../src/commitLint'
+import { createGitSandbox, cleanupSandbox, mockProcessExit } from './helpers/sandbox'
 
 // --- mock logger (suppress console noise during tests) ----------------------
 const loggerMock = vi.hoisted(() => ({
@@ -30,34 +29,6 @@ const loggerMock = vi.hoisted(() => ({
 vi.mock('rslog', () => ({ logger: loggerMock }))
 
 // --- helpers ----------------------------------------------------------------
-
-/**
- * Creates an isolated sandbox directory in the OS temp folder that mirrors a
- * real git worktree: a .git/ subdirectory is created and the returned
- * commitMsgPath points to .git/COMMIT_EDITMSG.
- */
-function createGitSandbox(): { repoDir: string; commitMsgPath: string } {
-  const repoDir = mkdtempSync(join(tmpdir(), 'varlet-commit-lint-'))
-  const gitDir = join(repoDir, '.git')
-  mkdirSync(gitDir)
-  const commitMsgPath = join(gitDir, 'COMMIT_EDITMSG')
-  return { repoDir, commitMsgPath }
-}
-
-function removeGitSandbox(repoDir: string) {
-  try {
-    rmSync(repoDir, { recursive: true, force: true })
-  } catch {
-    // ignore cleanup errors (common on Windows when git holds file locks)
-  }
-}
-
-/** Spies on process.exit and converts it into a thrown error so tests can assert on it. */
-function mockProcessExit() {
-  return vi.spyOn(process, 'exit').mockImplementation(((code?: number) => {
-    throw new Error(`process.exit:${code}`)
-  }) as never)
-}
 
 // ---------------------------------------------------------------------------
 // COMMIT_HEADER_RE
@@ -162,7 +133,7 @@ describe('getCommitMessage', () => {
   })
 
   afterEach(() => {
-    removeGitSandbox(repoDir)
+    cleanupSandbox(repoDir)
   })
 
   it('reads commit message from a real file', () => {
@@ -196,7 +167,7 @@ describe('commitLint', () => {
 
   afterEach(() => {
     vi.restoreAllMocks()
-    removeGitSandbox(repoDir)
+    cleanupSandbox(repoDir)
   })
 
   // -- valid commit messages ------------------------------------------------
