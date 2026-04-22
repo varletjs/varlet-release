@@ -1,6 +1,7 @@
 import { tmpdir } from 'node:os'
 import { resolve } from 'node:path'
 import { vi } from 'vite-plus/test'
+import { getIsolatedGitEnv } from './testEnv'
 
 const SANDBOX_ROOT = resolve(tmpdir())
 const CANCEL_SYMBOL = Symbol.for('clack:cancel')
@@ -70,6 +71,10 @@ vi.mock('tinyexec', async (importOriginal) => {
 
       const injectedOpts = {
         ...opts,
+        env: {
+          ...getIsolatedGitEnv(),
+          ...opts?.env,
+        },
         nodeOptions: {
           cwd: process.cwd(),
           ...opts?.nodeOptions,
