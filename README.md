@@ -20,6 +20,8 @@
 
 > `Varlet Release` requires `Node.js` ^20.19.0 || >=22.12.0 and `esm` only.
 
+If you are upgrading from `v1` to `v2`, read the [migration guide](./MIGRATION.md) first.
+
 ## Quick Start
 
 Install dependencies:
