@@ -1,1 +1,1 @@
-vp run commit-lint -p $1
+vp run commit-lint $1
