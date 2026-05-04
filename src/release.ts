@@ -1,4 +1,4 @@
-import { existsSync, readdirSync, writeFileSync } from 'node:fs'
+import { globSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { styleText } from 'node:util'
 import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
@@ -124,16 +124,11 @@ async function pushGit(version: string, remote = 'origin', skipGitTag = false) {
 }
 
 export function getPackageJsons(cwd: string = process.cwd()): PackageJsonEntry[] {
-  const packageJsonPaths = [resolve(cwd, 'package.json')]
-  const packagesDir = resolve(cwd, 'packages')
-  if (existsSync(packagesDir)) {
-    for (const name of readdirSync(packagesDir)) {
-      const pkgPath = resolve(packagesDir, name, 'package.json')
-      if (existsSync(pkgPath)) {
-        packageJsonPaths.push(pkgPath)
-      }
-    }
-  }
+  const patterns = ['package.json', 'packages/*/package.json']
+
+  const packageJsonPaths = patterns.flatMap((pattern) =>
+    globSync(pattern, { cwd }).map((relativePath) => resolve(cwd, relativePath)),
+  )
 
   return packageJsonPaths.map((path) => ({
     filePath: path,
