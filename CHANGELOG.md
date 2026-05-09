@@ -1,9 +1,28 @@
+## [2.2.2](https://github.com/varletjs/release/compare/v2.2.1...v2.2.2) (2026-05-09)
+
+
+### Bug Fixes
+
+* **publish:** show pnpm publish failed log ([e863cdc](https://github.com/varletjs/release/commit/e863cdc724e58a491cd4d55b6b48c0c7258ca0b2))
+
+
+### Features
+
+* **release:** colorize version numbers in prompts ([168e485](https://github.com/varletjs/release/commit/168e485b74453c0628dd99660529b5c2aa347361))
+
+
+### Refactoring
+
+* **release:** replace readdirSync with globSync for package.json retrieval ([058420a](https://github.com/varletjs/release/commit/058420ae74f0a92029f7e4a7ed4f5b12191c57a1))
+
 ## [2.2.1](https://github.com/varletjs/release/compare/v2.2.0...v2.2.1) (2026-04-15)
 
 
 ### Bug Fixes
 
 * **release:** fix package.json not reverting on single-package preview release ([f0dfa7c](https://github.com/varletjs/release/commit/f0dfa7cf7c053ee19697530df4148dff7580e294))
+
+# [2.2.0](https://github.com/varletjs/release/compare/v2.1.1...v2.2.0) (2026-04-14)
 
 
 ### Features
