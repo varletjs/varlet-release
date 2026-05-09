@@ -103,7 +103,7 @@ export async function publish({
     logStdout(ret)
   } catch (error: unknown) {
     s.cancel('Publish all packages failed')
-    throw (error as any)?.output?.stderr ?? error
+    throw (error as any)?.output?.stderr || (error as any)?.output?.stdout || error
   }
 }
 
