@@ -157,7 +157,10 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
     await select({
       message: 'Version confirm',
       options: [
-        { label: `All packages version ${currentVersion} -> ${expectVersion}`, value: 'confirm' as const },
+        {
+          label: `All packages version ${styleText('red', currentVersion)} -> ${styleText('green', expectVersion)}`,
+          value: 'confirm' as const,
+        },
         { label: 'Back to previous step', value: BACK_VALUE },
       ],
     }),
@@ -189,7 +192,7 @@ function computeExpectVersion(currentVersion: string, type: ReleaseType): string
 async function getReleaseType(currentVersion: string) {
   return unwrapPromptResult(
     await select({
-      message: `Please select release type, current version ${currentVersion}`,
+      message: `Please select release type`,
       options: RELEASE_TYPES.map((type) => {
         const expectVersion = computeExpectVersion(currentVersion, type as ReleaseType)
         return { label: `${type} (${expectVersion})`, value: type }
