@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 
 const indexMock = vi.hoisted(() => ({
@@ -102,10 +103,10 @@ describe('cli', () => {
   })
 
   it('runs commit-lint command with options', async () => {
+    const commitMsgPath = resolve('tmp/COMMIT_EDITMSG')
     await runCli([
       'commit-lint',
-      '--commitMessagePath',
-      'C:\\tmp\\COMMIT_EDITMSG',
+      commitMsgPath,
       '--commitMessageRe',
       '^feat',
       '--errorMessage',
@@ -116,7 +117,7 @@ describe('cli', () => {
 
     expect(indexMock.commitLint).toHaveBeenCalledWith(
       expect.objectContaining({
-        commitMessagePath: 'C:\\tmp\\COMMIT_EDITMSG',
+        commitMessagePath: commitMsgPath,
         commitMessageRe: '^feat',
         errorMessage: 'error',
         warningMessage: 'warn',
@@ -125,7 +126,7 @@ describe('cli', () => {
   })
 
   it('supports short flags for commit-lint', async () => {
-    await runCli(['commit-lint', '-p', 'COMMIT_EDITMSG', '-r', '^feat', '-e', 'error', '-w', 'warn'])
+    await runCli(['commit-lint', 'COMMIT_EDITMSG', '-r', '^feat', '-e', 'error', '-w', 'warn'])
 
     expect(indexMock.commitLint).toHaveBeenCalledWith(
       expect.objectContaining({
