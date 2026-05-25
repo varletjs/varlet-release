@@ -22,6 +22,8 @@
 
 If you are upgrading from `v1` to `v2`, read the [migration guide](./MIGRATION.md) first.
 
+> **Note**: `Varlet Release` does not support OTP (one-time password) authentication. It is recommended to use a `bypass token` (an npm granular access token for automated publishing) to avoid authentication issues during the release process.
+
 ## Quick Start
 
 Install dependencies:
