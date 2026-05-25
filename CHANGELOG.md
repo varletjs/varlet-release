@@ -1,3 +1,10 @@
+## [2.2.3](https://github.com/varletjs/release/compare/v2.2.2...v2.2.3) (2026-05-25)
+
+
+### Bug Fixes
+
+* **test:** fix cli test ([6c58d19](https://github.com/varletjs/release/commit/6c58d199649d29b29a21dcf58edcf1dafd419b8c))
+
 ## [2.2.2](https://github.com/varletjs/release/compare/v2.2.1...v2.2.2) (2026-05-09)
 
 
