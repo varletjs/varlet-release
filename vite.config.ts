@@ -14,9 +14,16 @@ export default defineConfig({
       entry: ['src/index.ts'],
     },
   },
-  lint: lint({
-    vue: false,
-  }),
+  lint: {
+    ...lint({
+      vue: false,
+    }),
+
+    options: {
+      typeAware: true,
+      typeCheck: true,
+    },
+  },
   fmt: {
     ...fmt({
       ignores: ['dist/**', 'CHANGELOG.md'],

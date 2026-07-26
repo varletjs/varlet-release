@@ -18,25 +18,12 @@ const COMMIT_TYPE_MAP = {
   ci: 'Continuous Integration',
 } as const
 
-const ALWAYS_SHOW_TYPES = ['feat', 'fix', 'perf', 'revert', 'refactor'] as (keyof typeof COMMIT_TYPE_MAP)[]
+type CommitType = keyof typeof COMMIT_TYPE_MAP
+
+const ALWAYS_SHOW_TYPES = ['feat', 'fix', 'perf', 'revert', 'refactor'] as NonNullable<ChangelogOptions['showTypes']>
 
 const BREAKING_CHANGE_RE = /BREAKING CHANGES?:\s*([\s\S]+)/
 
-const MAIN_TEMPLATE = `{{> header}}
-
-{{> footer}}
-{{#each commitGroups}}
-
-{{#if title}}
-### {{title}}
-
-{{/if}}
-{{#each commits}}
-{{> commit root=@root}}
-{{/each}}
-
-{{/each}}
-`
 type Context = Parameters<ConventionalChangelog['context']>['0']
 
 function linkify(text: string, context: Context, issues: string[]): string {
@@ -138,7 +125,11 @@ function processBreakingChanges(commit: Commit, context: Context, issues: string
   return discard
 }
 
-function mapCommitType(commit: Commit, discard: boolean, showTypes: (keyof typeof COMMIT_TYPE_MAP)[]): boolean {
+function mapCommitType(
+  commit: Commit,
+  discard: boolean,
+  showTypes: NonNullable<ChangelogOptions['showTypes']>,
+): boolean {
   if (commit.revert) {
     commit.type = 'revert'
   }
@@ -147,9 +138,9 @@ function mapCommitType(commit: Commit, discard: boolean, showTypes: (keyof typeo
     return false
   }
 
-  const mapped = COMMIT_TYPE_MAP[commit.type as keyof typeof COMMIT_TYPE_MAP]
+  const mapped = COMMIT_TYPE_MAP[commit.type as CommitType]
   if (mapped) {
-    if (showTypes.includes(commit.type as keyof typeof COMMIT_TYPE_MAP) || !discard) {
+    if (showTypes.includes(commit.type as CommitType) || !discard) {
       commit.type = mapped
       return true
     }
@@ -161,10 +152,49 @@ function mapCommitType(commit: Commit, discard: boolean, showTypes: (keyof typeo
 function createDefaultWriterOpts({
   showTypes,
 }: {
-  showTypes: (keyof typeof COMMIT_TYPE_MAP)[]
+  showTypes: NonNullable<ChangelogOptions['showTypes']>
 }): NonNullable<ChangelogOptions['writerOpt']> {
   return {
-    mainTemplate: MAIN_TEMPLATE,
+    template(context): string {
+      const { headerPartial, preamblePartial, commitPartial, footerPartial, commitGroups } = context
+
+      const blocks: string[] = []
+
+      const header = headerPartial(context)
+      if (header) {
+        blocks.push(header)
+      }
+
+      const preamble = preamblePartial(context)
+      if (preamble) {
+        blocks.push(preamble)
+      }
+
+      const footer = footerPartial(context)
+      if (footer) {
+        blocks.push(footer)
+      }
+
+      if (commitGroups) {
+        for (const group of commitGroups) {
+          if (!group.commits?.length) {
+            continue
+          }
+          const items: string[] = []
+          items.push(`### ${group.title}`)
+          items.push('')
+          for (const commit of group.commits) {
+            const rendered = commitPartial(context, commit)
+            if (rendered) {
+              items.push(`* ${rendered}`)
+            }
+          }
+          blocks.push(items.join('\n'))
+        }
+      }
+
+      return blocks.join('\n\n')
+    },
 
     transform(_commit, context) {
       const commit = JSON.parse(JSON.stringify(_commit)) as Commit
@@ -192,11 +222,12 @@ function createDefaultWriterOpts({
     },
   }
 }
+
 export interface ChangelogOptions {
   cwd?: string
   releaseCount?: number
   file?: string
-  showTypes?: (keyof typeof COMMIT_TYPE_MAP)[]
+  showTypes?: readonly CommitType[]
   outputUnreleased?: boolean
   writerOpt?: Parameters<ConventionalChangelog['writer']>[0]
 }
