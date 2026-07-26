@@ -74,9 +74,7 @@ changelog({
 
 ```ts
 changelog({
-  writerOpts: {
-    /* ... */
-  },
+  writerOpts: {/* ... */},
 })
 ```
 
@@ -84,9 +82,7 @@ changelog({
 
 ```ts
 changelog({
-  writerOpt: {
-    /* ... */
-  },
+  writerOpt: {/* ... */},
 })
 ```
 

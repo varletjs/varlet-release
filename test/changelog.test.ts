@@ -166,7 +166,7 @@ describe('changelog', () => {
     {
       name: 'includes all groups when showTypes contains every supported type',
       options: {
-        showTypes: ['feat', 'fix', 'perf', 'revert', 'refactor', 'docs', 'style', 'test', 'build', 'ci'] as any[],
+        showTypes: ['feat', 'fix', 'perf', 'revert', 'refactor', 'docs', 'style', 'test', 'build', 'ci'] as const,
         file: 'all-types.md',
       },
       present: [

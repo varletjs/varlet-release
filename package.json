@@ -37,27 +37,27 @@
     "release:dev": "vp pack && node scripts/release.js",
     "test": "vp test",
     "test:coverage": "vp test run --coverage",
-    "type-check": "tsgo --noEmit"
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@clack/prompts": "^1.4.0",
+    "@clack/prompts": "^1.7.0",
     "cleye": "^2.6.0",
-    "rslog": "^2.1.1",
-    "semver": "^7.8.1",
-    "standard-changelog": "^7.0.1",
+    "rslog": "^2.3.0",
+    "semver": "^7.8.5",
+    "standard-changelog": "^8.1.0",
     "tinyexec": "^1.2.2"
   },
   "devDependencies": {
     "@configurajs/vite-plus": "^0.2.6",
     "@types/node": "^22.14.0",
     "@types/semver": "^7.7.1",
-    "@typescript/native-preview": "7.0.0-dev.20260524.1",
-    "@vitest/coverage-v8": "^4.1.5",
-    "vite-plus": "catalog:"
+    "@vitest/coverage-v8": "4.1.9",
+    "typescript": "^7.0.2",
+    "vite-plus": "0.2.6"
   },
   "engines": {
     "node": "^20.19.0 || >=22.12.0",
-    "pnpm": ">=10.0"
+    "pnpm": ">=11.0"
   },
-  "packageManager": "pnpm@11.1.3"
+  "packageManager": "pnpm@11.13.1"
 }
