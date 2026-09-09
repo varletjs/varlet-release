@@ -25,7 +25,7 @@ export async function checkLockfileSync(packageManager: PackageManager): Promise
 
   try {
     const { stdout } = await exec('git', ['diff', '--name-only', 'ORIG_HEAD', 'HEAD'], { throwOnError: true })
-    return stdout.includes(lockfile)
+    return stdout.split(/\r?\n/).some((file) => file === lockfile || file.endsWith(`/${lockfile}`))
   } catch {
     logger.warn('Error checking lockfile, please check manually.')
     return false

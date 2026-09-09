@@ -37,6 +37,12 @@ describe('lockfileCheck', () => {
       ['pnpm', 'test.txt\npackage.json\n', false],
       ['yarn', 'yarn.lock\nsrc/index.ts\n', true],
       ['npm', 'package-lock.json\nREADME.md\n', true],
+      // should match nested lockfiles
+      ['pnpm', 'packages/foo/pnpm-lock.yaml\n', true],
+      // should not match files that merely contain the lockfile name
+      ['pnpm', 'my-pnpm-lock.yaml\n', false],
+      ['pnpm', 'pnpm-lock.yaml.bak\n', false],
+      ['yarn', 'not-yarn.lock\n', false],
     ])('should detect lockfile sync for %s with stdout %j', async (packageManager, stdout, expected) => {
       const { x: mockExec } = await import('tinyexec')
       vi.mocked(mockExec).mockResolvedValue({ stdout } as any)
