@@ -6,6 +6,7 @@ export default defineConfig({
     '*': 'vp check --fix',
   },
   pack: {
+    deps: { resolveDepSubpath: true },
     entry: ['src/index.ts', 'src/cli.ts'],
     format: 'esm',
     outDir: 'dist',
