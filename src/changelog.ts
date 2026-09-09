@@ -22,7 +22,9 @@ type CommitType = keyof typeof COMMIT_TYPE_MAP
 
 const ALWAYS_SHOW_TYPES = ['feat', 'fix', 'perf', 'revert', 'refactor'] as NonNullable<ChangelogOptions['showTypes']>
 
-const BREAKING_CHANGE_RE = /BREAKING CHANGES?:\s*([\s\S]+)/
+// The breaking change description ends at the next footer token (Token: value / Token #value)
+// or the end of the text, following the Conventional Commits specification.
+const BREAKING_CHANGE_RE = /BREAKING CHANGES?:\s*([\s\S]*?)(?=\r?\n[\w-]+(?::\s|\s#)|$)/
 
 type Context = Parameters<ConventionalChangelog['context']>['0']
 
@@ -245,16 +247,23 @@ export function changelog({
 
   const defaultWriterOpts = writerOpt || createDefaultWriterOpts({ showTypes })
 
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     const generator = new StandardChangelog(cwd).readPackage().options({
       releaseCount,
       outputUnreleased,
     })
 
+    const onError = (error: Error) => {
+      s.cancel('Changelog generation failed')
+      reject(error)
+    }
+
     generator
       .writer(defaultWriterOpts)
       .writeStream()
+      .on('error', onError)
       .pipe(createWriteStream(resolvePath(cwd, file)))
+      .on('error', onError)
       .on('close', () => {
         s.stop('Changelog generated successfully!')
         resolve()

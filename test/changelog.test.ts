@@ -267,4 +267,83 @@ describe('changelog', () => {
     // Note: type prefix is removed, so we only see the subject
     expect(sanitizedContent).toContain('revert feat')
   })
+
+  it('should reject when the output stream fails', async () => {
+    await expect(changelog({ cwd: testRepo, file: 'nonexistent-dir/CHANGELOG.md' })).rejects.toThrow()
+  })
+})
+
+describe('changelog breaking changes extraction', () => {
+  let breakingSandbox: string
+  let breakingRepo: string
+
+  beforeAll(async () => {
+    breakingSandbox = createSandbox('varlet-changelog-breaking-test')
+    breakingRepo = join(breakingSandbox, 'repo')
+    ensureDirSync(breakingRepo)
+
+    const gitOpts = { nodeOptions: { cwd: breakingRepo } }
+    await exec('git', ['init'], gitOpts)
+    await exec('git', ['config', 'user.name', 'Tester'], gitOpts)
+    await exec('git', ['config', 'user.email', 'test@example.com'], gitOpts)
+    await exec('git', ['config', 'commit.gpgsign', 'false'], gitOpts)
+
+    writeFileSync(
+      join(breakingRepo, 'package.json'),
+      JSON.stringify(
+        {
+          name: 'varlet-changelog-breaking-dummy',
+          version: '1.0.0',
+          repository: { url: 'https://github.com/varletjs/release' },
+        },
+        null,
+        2,
+      ),
+    )
+
+    await exec('git', ['add', '.'], gitOpts)
+    await exec(
+      'git',
+      [
+        'commit',
+        '-m',
+        'refactor!: drop legacy API\n\nCloses #123\n\nBREAKING CHANGES: the legacy API has been removed\nSigned-off-by: Jane <jane@example.com>',
+      ],
+      gitOpts,
+    )
+
+    writeFileSync(join(breakingRepo, 'test.txt'), 'change config format')
+    await exec('git', ['add', '.'], gitOpts)
+    await exec(
+      'git',
+      [
+        'commit',
+        '-m',
+        'feat!: change config format\n\nBREAKING CHANGES:\nconfig file format changed.\nRead the migration guide before upgrading.',
+      ],
+      gitOpts,
+    )
+  })
+
+  afterAll(() => {
+    cleanupSandbox(breakingSandbox)
+  })
+
+  it('should not swallow subsequent footers into breaking change text', async () => {
+    await changelog({ cwd: breakingRepo, file: 'breaking-footer.md' })
+    const content = readFileSync(join(breakingRepo, 'breaking-footer.md'), 'utf-8')
+
+    expect(content).toContain('the legacy API has been removed')
+    // BREAKING CHANGES 之后的其他 footer(如 Signed-off-by)不应并入 breaking 描述
+    expect(content).not.toContain('Signed-off-by')
+  })
+
+  it('should keep multi-line breaking change descriptions', async () => {
+    await changelog({ cwd: breakingRepo, file: 'breaking-multiline.md' })
+    const content = readFileSync(join(breakingRepo, 'breaking-multiline.md'), 'utf-8')
+
+    // 多行 breaking 描述中不含 footer token,应完整保留
+    expect(content).toContain('config file format changed.')
+    expect(content).toContain('Read the migration guide before upgrading.')
+  })
 })
