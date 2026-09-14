@@ -18,6 +18,8 @@ minimumReleaseAgeExclude:
   - '@voidzero-dev/vite-plus-win32-arm64-msvc@0.2.6'
   - '@voidzero-dev/vite-plus-win32-x64-msvc@0.2.6'
   - vite-plus@0.2.6
+  - '@clack/core@1.5.1'
+  - '@clack/prompts@1.8.1'
 
 overrides:
   vite@*: 'catalog:'

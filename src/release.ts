@@ -1,7 +1,7 @@
 import { globSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { styleText } from 'node:util'
-import { cancel, confirm, isCancel, select, spinner } from '@clack/prompts'
+import { cancel, type CANCEL_SYMBOL, confirm, isCancel, select, spinner } from '@clack/prompts'
 import { logger } from 'rslog'
 import semver, { type ReleaseType } from 'semver'
 import { x as exec } from 'tinyexec'
@@ -23,7 +23,7 @@ interface PackageJsonEntry {
   config: PackageJsonConfig
 }
 
-function unwrapPromptResult<T>(result: T | symbol): T {
+function unwrapPromptResult<T>(result: T | typeof CANCEL_SYMBOL): T {
   if (isCancel(result)) {
     cancel('Operation cancelled.')
     process.exit(0)

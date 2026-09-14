@@ -43,7 +43,7 @@ Add the following configuration to `package.json`:
   },
   "simple-git-hooks": {
     "commit-msg": "pnpm exec vr commit-lint $1",
-    "post-merge": "pnpm exec vr lockfile-check --install"
+    "post-merge": "pnpm exec vr lockfile-check"
   }
 }
 ```
