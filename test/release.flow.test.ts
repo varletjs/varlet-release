@@ -148,6 +148,43 @@ describe('release process (lightweight)', () => {
     expect(existsSync(join(testRepo, 'CHANGELOG.md'))).toBe(false)
   })
 
+  it.each([
+    { releaseType: 'patch', expectedVersion: '1.0.1' },
+    { releaseType: 'minor', expectedVersion: '1.1.0' },
+    { releaseType: 'major', expectedVersion: '2.0.0' },
+  ] as const)(
+    'releases $releaseType without prompts when releaseType and yes are set',
+    async ({ releaseType, expectedVersion }) => {
+      await release({ releaseType, yes: true, skipChangelog: true, remote: 'origin' })
+
+      expect(loggerMock.error.mock.calls).toEqual([])
+      expect(promptsMock.confirm).not.toHaveBeenCalled()
+      expect(promptsMock.select).not.toHaveBeenCalled()
+      expect(readJSONSync(join(testRepo, 'package.json')).version).toBe(expectedVersion)
+    },
+  )
+
+  it('skips only the release type prompt when yes is not set', async () => {
+    promptsMock.confirm.mockResolvedValue(true)
+
+    await release({ releaseType: 'patch', skipNpmPublish: true, skipChangelog: true, remote: 'origin' })
+
+    expect(promptsMock.confirm).toHaveBeenCalledTimes(1)
+    expect(promptsMock.select).not.toHaveBeenCalled()
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.1')
+  })
+
+  it('exits when releaseType is invalid', async () => {
+    mockProcessExit()
+
+    await expect(release({ releaseType: 'huge' as any, yes: true })).rejects.toThrow('process.exit:1')
+
+    expect(loggerMock.error).toHaveBeenCalledWith(
+      expect.objectContaining({ message: expect.stringContaining('Invalid release type huge') }),
+    )
+    expect(readJSONSync(join(testRepo, 'package.json')).version).toBe('1.0.0')
+  })
+
   it('runs release flow without generating changelog when skipChangelog is enabled', async () => {
     promptsMock.confirm.mockResolvedValue(true)
     promptsMock.select.mockResolvedValueOnce('patch').mockResolvedValue('confirm')

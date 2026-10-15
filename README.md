@@ -95,6 +95,8 @@ Flags:
       --skip-git-tag                  Skip git tag
       --npm-tag string                npm tag
       --check-remote-version          Check remote version
+      --release-type string           Release type (patch, minor, major, prepatch, preminor, premajor), skip the release type prompt
+  -y, --yes                           Skip refs and registry confirmation
 ```
 
 _Example_:
@@ -109,6 +111,9 @@ pnpm exec vr release --skip-npm-publish
 pnpm exec vr release --skip-changelog
 # Check remote version, interrupt execution if the identical version already exists
 pnpm exec vr release --check-remote-version
+
+# Non-interactive release (e.g. for CI or AI agents): specify the release type and skip all confirmations
+pnpm exec vr release --release-type patch --yes
 
 # Specify the git remote name for pushing tags (useful when multiple remotes are configured, e.g. upstream, fork)
 pnpm exec vr release --remote upstream
@@ -127,6 +132,8 @@ release({
   skipChangelog?: boolean      // Whether to skip changelog generation
   skipGitTag?: boolean         // Whether to skip git tag creation
   checkRemoteVersion?: boolean // Whether to check remote version to avoid conflicts
+  releaseType?: 'patch' | 'minor' | 'major' | 'prepatch' | 'preminor' | 'premajor' // Release type, skips the release type prompt
+  yes?: boolean                // Whether to skip refs and registry confirmation
   task?(newVersion: string, oldVersion: string): Promise<void> // Custom task executed during the release
 })
 ```

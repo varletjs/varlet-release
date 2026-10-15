@@ -8,7 +8,9 @@ import { x as exec } from 'tinyexec'
 import { changelog } from './changelog.ts'
 import { readJSONSync } from './utils.ts'
 
-const RELEASE_TYPES = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor']
+export const RELEASE_TYPES = ['patch', 'minor', 'major', 'prepatch', 'preminor', 'premajor'] as const
+
+export type ReleaseCommandType = (typeof RELEASE_TYPES)[number]
 
 const BACK_VALUE = 'back' as const
 
@@ -143,8 +145,12 @@ export function updateVersion(version: string, cwd: string = process.cwd()): voi
   }
 }
 
-async function confirmRegistry() {
+async function confirmRegistry(yes = false) {
   const registry = (await exec('npm', ['config', 'get', 'registry'])).stdout
+  if (yes) {
+    logger.info(`Current registry is: ${registry}`)
+    return true
+  }
   return unwrapPromptResult(
     await confirm({
       message: `Current registry is: ${registry}`,
@@ -167,12 +173,17 @@ async function confirmVersion(currentVersion: string, expectVersion: string) {
   )
 }
 
-async function confirmRefs(remote = 'origin') {
+async function confirmRefs(remote = 'origin', yes = false) {
   const { stdout } = await exec('git', ['remote', '-v'])
   const reg = new RegExp(`${remote}\\t(.*) \\(push\\)`)
 
   const repo = stdout.match(reg)?.[1]
   const { stdout: branch } = await exec('git', ['branch', '--show-current'])
+
+  if (yes) {
+    logger.info(`Current refs ${repo}:refs/for/${styleText('blue', branch)}`)
+    return true
+  }
 
   return unwrapPromptResult(
     await confirm({
@@ -201,7 +212,13 @@ async function getReleaseType(currentVersion: string) {
   ) as ReleaseType
 }
 
-async function getReleaseVersion(currentVersion: string) {
+async function getReleaseVersion(currentVersion: string, releaseType?: ReleaseCommandType) {
+  if (releaseType) {
+    const expectVersion = computeExpectVersion(currentVersion, releaseType)
+    logger.info(`All packages version ${styleText('red', currentVersion)} -> ${styleText('green', expectVersion)}`)
+    return { isPreRelease: releaseType.startsWith('pre'), expectVersion }
+  }
+
   while (true) {
     const type = await getReleaseType(currentVersion)
     const isPreRelease = type.startsWith('pre')
@@ -231,6 +248,8 @@ export interface ReleaseCommandOptions {
   skipChangelog?: boolean
   skipGitTag?: boolean
   checkRemoteVersion?: boolean
+  releaseType?: ReleaseCommandType
+  yes?: boolean
   task?(newVersion: string, oldVersion: string): Promise<void>
 }
 
@@ -245,20 +264,24 @@ export async function release(options: ReleaseCommandOptions): Promise<void> {
       return
     }
 
+    if (options.releaseType && !RELEASE_TYPES.includes(options.releaseType)) {
+      throw new Error(`Invalid release type ${options.releaseType}, expected one of: ${RELEASE_TYPES.join(', ')}`)
+    }
+
     if (!(await isWorktreeEmpty())) {
       logger.error('Git worktree is not empty, please commit changed')
       return
     }
 
-    if (!(await confirmRefs(options.remote))) {
+    if (!(await confirmRefs(options.remote, options.yes))) {
       return
     }
 
-    if (!options.skipNpmPublish && !(await confirmRegistry())) {
+    if (!options.skipNpmPublish && !(await confirmRegistry(options.yes))) {
       return
     }
 
-    const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion)
+    const { isPreRelease, expectVersion } = await getReleaseVersion(currentVersion, options.releaseType)
 
     if (options.checkRemoteVersion && (await isSameVersion(expectVersion, cwd))) {
       logger.error('Please check remote version.')

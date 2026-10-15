@@ -12,6 +12,7 @@ const releaseTestState = vi.hoisted(() => {
   const loggerMock = {
     error: vi.fn(),
     warn: vi.fn(),
+    info: vi.fn(),
     log: vi.fn(),
     success: vi.fn(),
   }
@@ -50,6 +51,7 @@ export function resetReleaseTestDoubles() {
   setMockExecOverride(null)
   loggerMock.error.mockClear()
   loggerMock.warn.mockClear()
+  loggerMock.info.mockClear()
   loggerMock.log.mockClear()
   loggerMock.success.mockClear()
   promptsMock.confirm.mockReset()
