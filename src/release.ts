@@ -141,7 +141,7 @@ export function getPackageJsons(cwd: string = process.cwd()): PackageJsonEntry[]
 export function updateVersion(version: string, cwd: string = process.cwd()): void {
   for (const { config, filePath } of getPackageJsons(cwd)) {
     config.version = version
-    writeFileSync(filePath, JSON.stringify(config, null, 2))
+    writeFileSync(filePath, `${JSON.stringify(config, null, 2)}\n`)
   }
 }
 

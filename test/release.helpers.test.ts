@@ -1,4 +1,4 @@
-import { writeFileSync } from 'node:fs'
+import { readFileSync, writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vite-plus/test'
 import { getPackageJsons, release, updateVersion } from '../src/release'
@@ -82,6 +82,7 @@ describe('release helper functions', () => {
 
     for (const filePath of [join(helperRepo, 'package.json'), ...extraFiles]) {
       expect(readJSONSync(filePath).version).toBe('2.0.0')
+      expect(readFileSync(filePath, 'utf-8').endsWith('}\n')).toBe(true)
     }
   })
 
