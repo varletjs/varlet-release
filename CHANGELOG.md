@@ -1,5 +1,19 @@
-## [2.2.3](https://github.com/varletjs/release/compare/v2.2.2...v2.2.3) (2026-05-25)
+# [2.3.0](https://github.com/varletjs/release/compare/v2.2.3...v2.3.0) (2026-10-16)
 
+### Bug Fixes
+
+* **lockfileCheck:** improve lockfile detection logic in checkLockfileSync function ([e64616d](https://github.com/varletjs/release/commit/e64616d0d4f0b3192523200689a1bc654fd19bb1))
+
+### Features
+
+* **changelog:** add tests for breaking changes extraction and output stream failure ([13d4edb](https://github.com/varletjs/release/commit/13d4edbe7acd051cb31d1167e508a1289d4886ab))
+* **release:** add releaseType and yes options for non-interactive release ([#51](https://github.com/varletjs/release/issues/51)) ([09ed087](https://github.com/varletjs/release/commit/09ed087126c4c70a9e0e1ab6381ad4a8d8257ab8))
+
+### Refactoring
+
+* **changelog:** replace template characters with function ([#50](https://github.com/varletjs/release/issues/50)) ([15f3b35](https://github.com/varletjs/release/commit/15f3b353bae24c498182ab1c6e1a07106c59afe5))
+
+## [2.2.3](https://github.com/varletjs/release/compare/v2.2.2...v2.2.3) (2026-05-25)
 
 ### Bug Fixes
 
@@ -7,16 +21,13 @@
 
 ## [2.2.2](https://github.com/varletjs/release/compare/v2.2.1...v2.2.2) (2026-05-09)
 
-
 ### Bug Fixes
 
 * **publish:** show pnpm publish failed log ([e863cdc](https://github.com/varletjs/release/commit/e863cdc724e58a491cd4d55b6b48c0c7258ca0b2))
 
-
 ### Features
 
 * **release:** colorize version numbers in prompts ([168e485](https://github.com/varletjs/release/commit/168e485b74453c0628dd99660529b5c2aa347361))
-
 
 ### Refactoring
 
@@ -24,13 +35,11 @@
 
 ## [2.2.1](https://github.com/varletjs/release/compare/v2.2.0...v2.2.1) (2026-04-15)
 
-
 ### Bug Fixes
 
 * **release:** fix package.json not reverting on single-package preview release ([f0dfa7c](https://github.com/varletjs/release/commit/f0dfa7cf7c053ee19697530df4148dff7580e294))
 
 # [2.2.0](https://github.com/varletjs/release/compare/v2.1.1...v2.2.0) (2026-04-14)
-
 
 ### Features
 
@@ -40,23 +49,19 @@
 
 ## [2.1.1](https://github.com/varletjs/release/compare/v2.1.0...v2.1.1) (2026-04-14)
 
-
 ### Bug Fixes
 
 * **lockfileCheck:** add package manager name guard ([ab8c8f6](https://github.com/varletjs/release/commit/ab8c8f6502e86670c6e8f40e95b0cba6529e1c47))
 
-
 ### Features
 
 * **release:** simplify version number preview when selecting a version ([815517e](https://github.com/varletjs/release/commit/815517e6339dbeb93eeb28842e56463e3b15aebb))
-
 
 ### Refactoring
 
 * **commitLint.ts:** remove outdated reference links ([93537da](https://github.com/varletjs/release/commit/93537da202f3eb3119c5c49d882c78655adb9915))
 
 # [2.1.0](https://github.com/varletjs/release/compare/v2.0.1...v2.1.0) (2026-04-14)
-
 
 ### Refactoring
 
@@ -65,27 +70,23 @@
 
 ## [2.0.1](https://github.com/varletjs/release/compare/v2.0.0...v2.0.1) (2026-04-12)
 
-
 ### Refactoring
 
 * **release:** make execGit function async ([1792cd9](https://github.com/varletjs/release/commit/1792cd9646e0de20ae2ce5366316deebf2637b21))
 
 # [2.0.0](https://github.com/varletjs/release/compare/v1.2.0...v2.0.0) (2026-04-12)
 
-
 ### BREAKING CHANGES
 
 * **cli:** migrate CLI tool from commander to cleye
-* **changelog:** simplify breaking changes handling logic
 * **changelog:** refactor changelog generation and upgrade dependencies
-
+* **changelog:** simplify breaking changes handling logic
 
 ### Features
 
 * **changelog:** add option to output unreleased version ([354536b](https://github.com/varletjs/release/commit/354536b1f863b2affc83f855b850f0f3370f78f0))
 * **changelog:** add support for breaking change body ([d7eb060](https://github.com/varletjs/release/commit/d7eb0602cd32b6909e3fde5a11be07b27a64b085))
 * **lockfile:** add lockfile sync check functionality ([3d099fe](https://github.com/varletjs/release/commit/3d099fe9dab6b7e65e60c97190ddb548580002fe))
-
 
 ### Refactoring
 
@@ -94,25 +95,21 @@
 * **cli:** migrate CLI tool from commander to cleye ([008e304](https://github.com/varletjs/release/commit/008e304172991e3b40cef9f3f2e9b68ad4d08f8c))
 * **release:** improve code organization and type safety ([421d9e5](https://github.com/varletjs/release/commit/421d9e5ad7fade2824b9e9374826d8e913db1fcb))
 
-
 ### Reverts
 
 * "chore: initial commit" ([21a8bac](https://github.com/varletjs/release/commit/21a8bac5d7950214f23c551a2a9474e7f8ed5666))
 
 # [1.2.0](https://github.com/varletjs/release/compare/v1.1.0...v1.2.0) (2026-04-10)
 
-
 ### Features
 
 * upgrade typescript@6 and some deps ([ed3d970](https://github.com/varletjs/release/commit/ed3d97027ad96c889a9cab440fdd41daac57780b))
-
 
 ### Refactoring
 
 * move from build, lint, fmt to the all-in-one package of vite-plus ([#45](https://github.com/varletjs/release/issues/45)) ([2448309](https://github.com/varletjs/release/commit/2448309497e678618cc91515964c0f8202490e34))
 
 # [1.1.0](https://github.com/varletjs/release/compare/v1.0.2...v1.1.0) (2026-03-23)
-
 
 ### Refactoring
 
@@ -121,13 +118,11 @@
 
 ## [1.0.2](https://github.com/varletjs/release/compare/v1.0.1...v1.0.2) (2026-02-07)
 
-
 ### Refactoring
 
 * **changelog:** refactor changelog generation logic to enhance functionality and maintainability ([c3fbdd4](https://github.com/varletjs/release/commit/c3fbdd43b8a6fb02ddd48dda6d645d61d24c877a))
 
 ## [1.0.1](https://github.com/varletjs/release/compare/v1.0.0...v1.0.1) (2026-02-07)
-
 
 ### Features
 
@@ -135,18 +130,15 @@
 
 # [1.0.0](https://github.com/varletjs/release/compare/v0.4.4...v1.0.0) (2026-02-07)
 
-
 ### BREAKING CHANGES
 
 * transform to pure ESM package and requires Node 20+ ([#41](https://github.com/varletjs/release/issues/41))
-
 
 ### Bug Fixes
 
 * **release.ts:** handle publish errors and improve error logging ([8369475](https://github.com/varletjs/release/commit/83694758910d2ca06fd9cd8f52bb152647aa3e5b))
 * **release.ts:** log all errors in release function ([6ef4365](https://github.com/varletjs/release/commit/6ef436577d3075625baf13019467e9a94f6deb47))
 * **tests:** update mockCwd to handle cross-platform compatibility ([b3eae79](https://github.com/varletjs/release/commit/b3eae79d92659f0b09f0ea63d7970075d409d38a))
-
 
 ### Features
 
@@ -156,7 +148,6 @@
 * **tests:** add unit tests for commitLint and release modules ([5ec5c77](https://github.com/varletjs/release/commit/5ec5c7724d6acf79ee721df6e5e7520b1f542a4b))
 * transform to pure ESM package and requires Node 20+ ([#41](https://github.com/varletjs/release/issues/41)) ([38726d6](https://github.com/varletjs/release/commit/38726d6254487a302f49107823c9dac96eabf6cc))
 
-
 ### Refactoring
 
 * **cli:** bin/index.js -> src/cli.ts ([2b8b9a8](https://github.com/varletjs/release/commit/2b8b9a85afb21edc0ff1bf4dbbef4874e51f8564))
@@ -165,13 +156,11 @@
 
 ## [0.4.4](https://github.com/varletjs/release/compare/v0.4.2...v0.4.4) (2025-11-16)
 
-
 ### Bug Fixes
 
 * fix the npm release error handling ([#37](https://github.com/varletjs/release/issues/37)) ([fb831c4](https://github.com/varletjs/release/commit/fb831c4ccc5a3c8b88e10e394a7f0a790c400db5))
 
 ## [0.4.2](https://github.com/varletjs/release/compare/v0.4.1...v0.4.2) (2025-11-06)
-
 
 ### Refactoring
 
@@ -179,13 +168,11 @@
 
 ## [0.4.1](https://github.com/varletjs/release/compare/v0.4.0...v0.4.1) (2025-05-21)
 
-
 ### Features
 
 * **changelog:** enable refactor for display in the CHANGELOG.md ([#33](https://github.com/varletjs/release/issues/33)) ([2381b66](https://github.com/varletjs/release/commit/2381b66a42d0504b16b74fe5a2b73dd18b6195bc))
 
 # [0.4.0](https://github.com/varletjs/release/compare/v0.3.3...v0.4.0) (2025-05-20)
-
 
 ### Features
 
@@ -194,11 +181,9 @@
 
 ## [0.3.3](https://github.com/varletjs/release/compare/v0.3.2...v0.3.3) (2025-01-15)
 
-
 ### Features
 
 * support changelog preset ([#28](https://github.com/varletjs/release/issues/28)) ([9daf25c](https://github.com/varletjs/release/commit/9daf25cf58bfb55034118344f8c900d3f1e58820))
-
 
 ### Refactoring
 
@@ -206,11 +191,9 @@
 
 ## [0.3.2](https://github.com/varletjs/release/compare/v0.3.1...v0.3.2) (2024-12-24)
 
-
 ### Bug Fixes
 
 * skip confirm registry when skipNpmPublish is true ([#23](https://github.com/varletjs/release/issues/23)) ([ea20a40](https://github.com/varletjs/release/commit/ea20a40c191ba62c96b7e9c1522c3adb0ad42ccf))
-
 
 ### Refactoring
 
@@ -219,18 +202,15 @@
 
 ## [0.3.1](https://github.com/varletjs/release/compare/v0.3.0...v0.3.1) (2024-11-02)
 
-
 ### Refactoring
 
 * optimize release type order ([#13](https://github.com/varletjs/release/issues/13)) ([8b5b017](https://github.com/varletjs/release/commit/8b5b0178d93753071349b9ef29641db5da8b1f3a))
 
 # [0.3.0](https://github.com/varletjs/release/compare/v0.2.11...v0.3.0) (2024-10-26)
 
-
 ### Features
 
 * support viewing current version ([#12](https://github.com/varletjs/release/issues/12)) ([daf30da](https://github.com/varletjs/release/commit/daf30da9c3004074861915f19d4f28594551a672))
-
 
 ### Refactoring
 
@@ -239,13 +219,11 @@
 
 ## [0.2.11](https://github.com/varletjs/release/compare/v0.2.10...v0.2.11) (2024-07-16)
 
-
 ### Features
 
 * update release task function to accept version parameters ([e2b6ead](https://github.com/varletjs/release/commit/e2b6eadc3b2c9de5aa4341ee48ff21264c2c3a26))
 
 ## [0.2.10](https://github.com/varletjs/release/compare/v0.2.9...v0.2.10) (2024-04-26)
-
 
 ### Features
 
@@ -253,13 +231,11 @@
 
 ## [0.2.9](https://github.com/varletjs/release/compare/v0.2.8...v0.2.9) (2024-04-21)
 
-
 ### Features
 
 * ensure commit message path is provided for commit linting ([0eca4a1](https://github.com/varletjs/release/commit/0eca4a1cf0a600c96c805976988e9269233860a9))
 
 ## [0.2.8](https://github.com/varletjs/release/compare/v0.2.7...v0.2.8) (2024-04-09)
-
 
 ### Refactoring
 
@@ -267,13 +243,11 @@
 
 ## [0.2.7](https://github.com/varletjs/release/compare/v0.2.6...v0.2.7) (2024-04-01)
 
-
 ### Features
 
 * multiple version confirmation is supported ([#6](https://github.com/varletjs/release/issues/6)) ([ba9ed65](https://github.com/varletjs/release/commit/ba9ed653cae7320dfe2f6c8d9de2f24ca93ef133))
 
 ## [0.2.6](https://github.com/varletjs/release/compare/v0.2.5...v0.2.6) (2024-03-22)
-
 
 ### Features
 
@@ -281,20 +255,17 @@
 
 ## [0.2.5](https://github.com/varletjs/release/compare/v0.2.4...v0.2.5) (2024-02-19)
 
-
 ### Bug Fixes
 
 * fix tag order ([661cfcc](https://github.com/varletjs/release/commit/661cfccab9aa771d1b196219b525b78ead110478))
 
 ## [0.2.4](https://github.com/varletjs/release/compare/v0.2.3...v0.2.4) (2024-02-19)
 
-
 ### Features
 
 * support npmTag ([74a0c9a](https://github.com/varletjs/release/commit/74a0c9a235e97b8c1ed167faea54184fe7dfda48))
 
 ## [0.2.3](https://github.com/varletjs/release/compare/v0.2.2...v0.2.3) (2024-01-30)
-
 
 ### Features
 
@@ -303,20 +274,17 @@
 
 ## [0.2.2](https://github.com/varletjs/release/compare/v0.2.1...v0.2.2) (2024-01-25)
 
-
 ### Bug Fixes
 
 * fix skip git tag command error ([892d771](https://github.com/varletjs/release/commit/892d7712e57383eca8e291c02eed48afae564b9f))
 
 ## [0.2.1](https://github.com/varletjs/release/compare/v0.2.0...v0.2.1) (2024-01-25)
 
-
 ### Features
 
 * support --skip-git-tag ([6e59690](https://github.com/varletjs/release/commit/6e596905437c4d08a31577690d08a5dbdc0d0007))
 
 # [0.2.0](https://github.com/varletjs/release/compare/v0.1.2...v0.2.0) (2024-01-23)
-
 
 ### Features
 
@@ -326,18 +294,15 @@
 
 ## [0.1.1](https://github.com/varletjs/release/compare/v0.1.0...v0.1.1) (2023-12-13)
 
-
 ### Refactoring
 
 * uniform parameter name ([81c5504](https://github.com/varletjs/release/commit/81c5504af5ac550a24ac351baf50d702fc192927))
 
 # [0.1.0](https://github.com/varletjs/release/compare/v0.0.5...v0.1.0) (2023-12-12)
 
-
 ### Features
 
 * add custom regex validation and error message display ([f6dc9c3](https://github.com/varletjs/release/commit/f6dc9c3ebb05af25d3aa01ce2a51c776daeac7c9))
-
 
 ### Refactoring
 
@@ -345,20 +310,17 @@
 
 ## [0.0.5](https://github.com/varletjs/release/compare/v0.0.4...v0.0.5) (2023-12-07)
 
-
 ### Features
 
 * expose more functions ([7895689](https://github.com/varletjs/release/commit/7895689306a73d5ef3b59e4759e2a603b47a40a7))
 
 ## [0.0.4](https://github.com/varletjs/release/compare/v0.0.3...v0.0.4) (2023-12-07)
 
-
 ### Features
 
 * support lint commit message ([e3200b2](https://github.com/varletjs/release/commit/e3200b2795a93213eab75af68674b1a6ea5327cf))
 
 ## [0.0.3](https://github.com/varletjs/release/compare/v0.0.2...v0.0.3) (2023-11-17)
-
 
 ### Bug Fixes
 
@@ -367,19 +329,16 @@
 
 ## [0.0.2](https://github.com/varletjs/release/compare/v0.0.1...v0.0.2) (2023-11-15)
 
-
 ### Features
 
 * remove feature one-time password ([c92c5a0](https://github.com/varletjs/release/commit/c92c5a07cfab6e7a3c4fde7963b4a7a536b23acc))
 
 ## [0.0.1](https://github.com/varletjs/release/compare/15e865524628c2dd7db31de8c3052a6f1e3d2276...v0.0.1) (2023-11-14)
 
-
 ### Features
 
 * command option add one-time password ([b06fc89](https://github.com/varletjs/release/commit/b06fc893e9c05985fd65bc814e2c33851144c497))
 * init ([15e8655](https://github.com/varletjs/release/commit/15e865524628c2dd7db31de8c3052a6f1e3d2276))
-
 
 ### Refactoring
 
