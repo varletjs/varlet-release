@@ -2,6 +2,7 @@
 import { cli, command } from 'cleye'
 import pkg from '../package.json' with { type: 'json' }
 import { changelog, commitLint, lockfileCheck, publish, release } from './index.ts'
+import { RELEASE_TYPES, type ReleaseCommandType } from './release.ts'
 
 cli({
   name: 'vr',
@@ -17,6 +18,11 @@ cli({
           skipGitTag: { type: Boolean, description: 'Skip git tag' },
           npmTag: { type: String, alias: 't', description: 'Npm tag' },
           checkRemoteVersion: { type: Boolean, alias: 'c', description: 'Check remote version' },
+          releaseType: {
+            type: String as (value: string) => ReleaseCommandType,
+            description: `Release type (${RELEASE_TYPES.join(', ')}), skip the release type prompt`,
+          },
+          yes: { type: Boolean, alias: 'y', description: 'Skip refs and registry confirmation' },
         },
         help: {
           description: 'Release all packages and generate changelogs',

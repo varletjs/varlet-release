@@ -95,6 +95,8 @@ _标志参考_：
       --skip-git-tag                  跳过 git tag
       --npm-tag string                npm tag
       --check-remote-version          检查远程版本
+      --release-type string           发布类型（patch、minor、major、prepatch、preminor、premajor），跳过发布类型选择
+  -y, --yes                           跳过 refs 和 registry 确认
 ```
 
 _使用示例_：
@@ -109,6 +111,9 @@ pnpm exec vr release --skip-npm-publish
 pnpm exec vr release --skip-changelog
 # 检查远程版本，若已存在相同版本则中断执行
 pnpm exec vr release --check-remote-version
+
+# 非交互式发布（适用于 CI 或 AI agent）：指定发布类型并跳过所有确认
+pnpm exec vr release --release-type patch --yes
 
 # 指定推送 tag 的 git remote 名称（适用于配置了多个 remote 的场景，如 upstream、fork 等）
 pnpm exec vr release --remote upstream
@@ -127,6 +132,8 @@ release({
   skipChangelog?: boolean      // 是否跳过生成变更日志
   skipGitTag?: boolean         // 是否跳过构建 git tag 过程
   checkRemoteVersion?: boolean // 是否检查远程版本，保证不发生版本冲突
+  releaseType?: 'patch' | 'minor' | 'major' | 'prepatch' | 'preminor' | 'premajor' // 发布类型，跳过发布类型选择
+  yes?: boolean                // 是否跳过 refs 和 registry 确认
   task?(newVersion: string, oldVersion: string): Promise<void> // 发布过程中执行的自定义任务
 })
 ```

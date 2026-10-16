@@ -73,6 +73,12 @@ describe('cli', () => {
       },
     ],
     [
+      'release non-interactive flags',
+      ['release', '--release-type', 'minor', '-y'],
+      indexMock.release,
+      { releaseType: 'minor', yes: true },
+    ],
+    [
       'publish',
       ['publish', '--check-remote-version', '--npm-tag', 'beta'],
       indexMock.publish,
